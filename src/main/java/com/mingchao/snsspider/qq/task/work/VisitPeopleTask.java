@@ -1,95 +1,67 @@
 package com.mingchao.snsspider.qq.task.work;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import com.mingchao.snsspider.http.CookieSnsStore;
-import com.mingchao.snsspider.http.SubmitTask;
+import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.http.WebDriverWrapper;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.qq.model.UserInfo;
 import com.mingchao.snsspider.qq.task.VisitTask;
 import com.mingchao.snsspider.qq.util.WebDriverUtil;
+import com.mingchao.snsspider.schedule.Schedule;
 
-public class VisitPeopleTask extends VisitTask {
+public class VisitPeopleTask extends VisitTask<UserInfo> {
 
 	private ScheduleUserKey schUserKey;
+	private Schedule<ScheduleUserKey> scheduleUser = resource.getScheduleUser(); 
 
 	public VisitPeopleTask(ScheduleUserKey userKey) {
 		this.schUserKey = userKey;
 	}
 
 	@Override
-	public void execute() {
-		getUserInfo();
-	}
-
-	private void getUserInfo() {
-		SubmitTask<UserInfo> getTask = new SubmitTask<UserInfo>() {
-
-			@Override
-			public UserInfo submit(WebDriverWrapper webDriverWrapper) {
-				
-				if (!visit(webDriverWrapper)) {
-					return null;
-				}
-				switch (WebDriverUtil.verifyStatus(webDriverWrapper
-						.getWebDriver())) {
-				case NOLOGIN:
-					return handleNoLogin(webDriverWrapper);
-				case NOPRIVILEGE:
-					return handleNoProvilege(webDriverWrapper);
-				case PRIVILEGE:
-					return handleProvilege(webDriverWrapper);
-				}
-				return null;
-			}
-		};
-		UserInfo info = resource.getPool().submit(getTask);
-		storage(info);
-	}
-	
 	protected boolean visit(WebDriverWrapper webDriverWrapper) {
 		Long qq = schUserKey.getQq();
-		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
-		
-		if(webDriverWrapper.getCookieStore() == null){
-			CookieSnsStore cookieStore = resource.getCookieStorePool().getRandomCookies();
-			if(cookieStore == null){
-				reschadule();
-				return false;
-			}else{
-				webDriverWrapper.applyCookieStore(cookieStore);
-			}
-		}
-		
-		// 使用Cookie池里的新Cookie,TODO 新登录任务
-		CookieSnsStore cookies2 = resource.getCookieStorePool().getRandomCookies();
-		WebDriverUtil.addCookies(webDriver, cookies2);
-		webDriverWrapper.setCookieStore(cookies2);
 		String profileUrl = resource.getUserProfileUrl(qq);
-		webDriver.get(profileUrl);
-		return true;
-	}
-
-	private UserInfo handleNoLogin(WebDriverWrapper webDriverWrapper){
-		log.info(WebDriverUtil.STATUS.NOLOGIN);
-		CookieSnsStore cookies = webDriverWrapper.getCookieStore();
-		if (cookies != null) {
-			// 删除无用Cookie
-			resource.getCookieStorePool().deleteCookieStore(cookies);
-			//设置webDriver的cookie为null
-			webDriverWrapper.setCookieStore(null);
+		if (tryVisit(profileUrl, webDriverWrapper)) {
+			return true;
+		}else{
+			reschadule();
+			return false;
 		}
+	}
+
+	@Override
+	protected UserInfo handleNoLogin(boolean hadTryLogin,
+			WebDriverWrapper webDriverWrapper) {
+		log.info(WebDriverUtil.STATUS.NOLOGIN);
+		// 如果已经尝试登录过一次
+		if(hadTryLogin){
+			reschadule();
+			return null;
+		}else{
+			try{
+				login(webDriverWrapper);
+			} catch (TimeoutException e) {
+				log.warn(e, e);
+				reschadule();
+				return null;
+			}
+			return doVisit(true, webDriverWrapper);
+		}
+	}
+
+	@Override
+	protected UserInfo handleNoProvilege(WebDriverWrapper webDriverWrapper) {
 		return null;
 	}
 
-	private UserInfo handleNoProvilege(WebDriverWrapper webDriverWrapper) {
-		return null;
-	}
-	
-	private UserInfo handleProvilege(WebDriverWrapper webDriverWrapper) {
+	@Override
+	protected UserInfo handleProvilege(WebDriverWrapper webDriverWrapper) {
 		Long qq = schUserKey.getQq();
 		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
 		
@@ -125,20 +97,36 @@ public class VisitPeopleTask extends VisitTask {
 		info.setCompany_cadress(company_cadress);
 		info.setCaddress(caddress);
 		
-		webDriver.switchTo().parentFrame();
+		webDriver.switchTo().defaultContent();
 		log.info("get profile, qq: " + qq);
 		return info;
 	}
+
+	@Override
+	protected UserInfo handleException(WebDriverException e,
+			WebDriverWrapper webDriverWrapper) {
+		reschadule();
+		throw e;
+	}
 	
-	private void reschadule() {
-		// 添加VisitPeople任务
-		scheduleUser.reschadule(schUserKey);
+	@Override
+	protected UserInfo handleException(NPInterruptedException e,
+			WebDriverWrapper webDriverWrapper) {
+		reschadule();
+		throw e;
 	}
 
-	private void storage(UserInfo info){
+	@Override
+	protected void handleResult(UserInfo info) {
 		if (info == null) {
 			return;
 		}
 		resource.getStorage().insertDuplicate(info);
 	}
+	
+	private void reschadule() {
+		schUserKey.setId(null);
+		scheduleUser.reschadule(schUserKey);
+	}
+
 }

@@ -5,9 +5,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import com.google.common.hash.Funnel;
+import com.google.common.hash.PrimitiveSink;
 import com.mingchao.snsspider.model.IdAble;
-import com.mingchao.snsspider.model.ToBytes;
-import com.mingchao.snsspider.util.Numeric;
 
 /**
  * 用于调度用户关系链
@@ -15,14 +15,14 @@ import com.mingchao.snsspider.util.Numeric;
  *
  */
 @Entity(name="t_schedule_follow_key")
-public class ScheduleFollowKey implements ToBytes,IdAble {
+public class ScheduleFollowKey implements IdAble {
 	private Long id;
 	private Long qq;
 	private Integer pageNum;
 
 	public ScheduleFollowKey(){
 	}
-
+	
 	public ScheduleFollowKey(Long qq, Integer pageNum) {
 		super();
 		this.qq = qq;
@@ -56,7 +56,24 @@ public class ScheduleFollowKey implements ToBytes,IdAble {
 	}
 
 	@Override
-	public byte[] toBytes() {
-		return Numeric.toBytes(qq);
+	public String toString() {
+		return "ScheduleFollowKey [id=" + id + ", qq=" + qq + ", pageNum="
+				+ pageNum + "]";
+	}
+
+	public static Funnel<ScheduleFollowKey> getFunnel(){
+		return ScheduleFollowKeyFunnel.INSTANCE;
+	}
+}
+enum ScheduleFollowKeyFunnel implements Funnel<ScheduleFollowKey> {
+	INSTANCE;
+
+	public void funnel(ScheduleFollowKey from, PrimitiveSink into) {
+		into.putLong(from.getQq());
+	}
+
+	@Override
+	public String toString() {
+		return "Funnels.ScheduleFollowKeyFunnel()";
 	}
 }

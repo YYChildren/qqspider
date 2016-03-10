@@ -1,6 +1,5 @@
 package com.mingchao.snsspider.qq.common;
 
-
 public class ParamentsProvider {
 	private static Paraments instance;
 
@@ -13,7 +12,7 @@ public class ParamentsProvider {
 
 	private static synchronized void initTaskExcutor() {
 		if (instance == null) {
-			instance = new BaseParaments();
+			instance = new ProperParaments();
 		}
 	}
 }

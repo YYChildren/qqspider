@@ -1,0 +1,35 @@
+#!/bin/bash
+
+MAIN_CLASS=com.mingchao.snsspider.qq.main.Main
+
+help(){
+    echo "使用说明"
+    echo "基本语法: ${0} [option]"
+    echo "命令模块："
+    echo "help                      显示当前帮助内容"
+    echo "start                     start相关操作"
+    echo "stop                      stop相关操作"
+    exit 0
+}
+
+start_spider(){
+    setsid java -Djava.ext.dirs=./lib -cp ./config:*.jar $MAIN_CLASS start
+}
+
+stop_spider(){
+    java -Djava.ext.dirs=./lib -cp ./config:*.jar $MAIN_CLASS stop
+}
+
+if [ $# -eq 0 ]; then
+    help
+fi
+
+## 获取子shell命令
+TARGET=$1
+shift
+case $TARGET in
+    help) help ;;
+    start) start_spider $*;;
+    stop) stop_spider $*;;
+    *) help ;;
+esac

@@ -6,11 +6,13 @@ import org.apache.http.client.ClientProtocolException;
 
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
-import com.mingchao.snsspider.qq.task.SingleTask;
+import com.mingchao.snsspider.qq.task.BaseTaskImpl;
+import com.mingchao.snsspider.schedule.Schedule;
 
-public class DispatchFollowTask  extends SingleTask {
+public class DispatchFollowTask  extends BaseTaskImpl {
 
 	private ScheduleUserKey suk;
+	private Schedule<ScheduleFollowKey> scheduleFollow = resource.getScheduleFollow(); 
 
 	public DispatchFollowTask(ScheduleUserKey userKey) {
 		this.suk = userKey;

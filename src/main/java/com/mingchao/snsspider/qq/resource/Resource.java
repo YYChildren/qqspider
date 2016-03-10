@@ -1,55 +1,50 @@
 package com.mingchao.snsspider.qq.resource;
 
-import com.mingchao.snsspider.http.CookieStorePool;
+import com.mingchao.snsspider.executor.TaskExcutor;
 import com.mingchao.snsspider.http.WebDriverPool;
-import com.mingchao.snsspider.manager.TaskExcutor;
-import com.mingchao.snsspider.qq.provider.CookieStorePoolProvider;
+import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
+import com.mingchao.snsspider.qq.model.ScheduleUserKey;
+import com.mingchao.snsspider.qq.provider.ScheduleProvider;
 import com.mingchao.snsspider.qq.provider.StorageProvider;
 import com.mingchao.snsspider.qq.provider.TaskExecutorProvider;
 import com.mingchao.snsspider.qq.provider.WebDriverProvider;
+import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.storage.Storage;
+import com.mingchao.snsspider.util.Closeable;
 
-public class Resource {
+public class Resource implements Closeable{
 	//只用Resource 单例，其他资源是否单例由Resource控制
 	private static Resource instance;
-	private Storage storage = StorageProvider.newMySQLStorage();
 	private TaskExcutor taskExcutor = TaskExecutorProvider.newInstance();
-	private CookieStorePool cookieStorePool = CookieStorePoolProvider.newInstance();
 	private WebDriverPool webDriverPool = WebDriverProvider.newInstance();
-
-	private String mainUrl = "http://user.qzone.qq.com/";
-	private String userProfileUrl = "http://user.qzone.qq.com/@QQ/profile";
-	private String modUrl = "http://user.qzone.qq.com/@QQ/mood";
+	private Storage storage = StorageProvider.newMySQLStorage();
+	private Schedule<ScheduleFollowKey> scheduleFollow = ScheduleProvider.getScheduleFollow();
+	private Schedule<ScheduleUserKey> scheduleUser = ScheduleProvider.getScheduleUser();
 
 	private Resource() {
 	}
 
+	@Override
 	public void close() {
-		webDriverPool.quit();
+		taskExcutor.close();// 关闭线程池
+		webDriverPool.close();//关闭webDriver 池
+		scheduleUser.close();//关闭user 调度器
+		scheduleFollow.close();//关闭follow 调度器
+		storage.close();//关闭hibernate
+		instance = null;
 	}
 
 	public static Resource getInstance() {
 		if (instance == null) {
-			getInstance2();
+			init();
 		}
 		return instance;
 	}
 
-	public static synchronized Resource getNewInstance() {
-		instance.close();
-		instance = null;
-		getInstance2();
-		return instance;
-	}
-
-	private static synchronized void getInstance2() {
+	private static synchronized void init() {
 		if (instance == null) {
-			instance = newInstance();
+			instance = new Resource();
 		}
-	}
-
-	public static Resource newInstance() {
-		return new Resource();
 	}
 
 	public Storage getStorage() {
@@ -60,10 +55,6 @@ public class Resource {
 		return taskExcutor;
 	}
 
-	public CookieStorePool getCookieStorePool() {
-		return cookieStorePool;
-	}
-
 	public WebDriverPool getWebDriverPool() {
 		return webDriverPool;
 	}
@@ -71,24 +62,24 @@ public class Resource {
 	public WebDriverPool getPool() {
 		return webDriverPool;
 	}
-
-	public String getMainUrl() {
-		return mainUrl;
+	
+	public Schedule<ScheduleFollowKey> getScheduleFollow() {
+		return scheduleFollow;
 	}
 
+	public Schedule<ScheduleUserKey> getScheduleUser() {
+		return scheduleUser;
+	}
+
+	public String getLoginUrl(){
+		return "http://i.qq.com/";
+	}
+	
 	public String getUserProfileUrl(Long qq) {
-		return userProfileUrl.replace("@QQ", qq.toString());
-	}
-
-	public String getUserProfileUrl() {
-		return userProfileUrl;
-	}
-
-	public String getModUrl() {
-		return modUrl;
+		return String.format("http://user.qzone.qq.com/%d/profile", qq);
 	}
 
 	public String getModUrl(Long qq) {
-		return modUrl.replace("@QQ", qq.toString());
+		return String.format("http://user.qzone.qq.com/%d/mood", qq);
 	}
 }

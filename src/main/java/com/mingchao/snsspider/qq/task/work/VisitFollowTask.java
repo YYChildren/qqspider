@@ -2,17 +2,18 @@ package com.mingchao.snsspider.qq.task.work;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import com.mingchao.snsspider.http.CookieSnsStore;
-import com.mingchao.snsspider.http.SubmitTask;
+import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.http.WebDriverWrapper;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
@@ -20,112 +21,76 @@ import com.mingchao.snsspider.qq.model.UserKey;
 import com.mingchao.snsspider.qq.model.UserRelation;
 import com.mingchao.snsspider.qq.task.VisitTask;
 import com.mingchao.snsspider.qq.util.WebDriverUtil;
+import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.util.TimeUtils;
 
-public class VisitFollowTask extends VisitTask {
+public class VisitFollowTask extends VisitTask<List<Long>>{
+	private Schedule<ScheduleFollowKey> scheduleFollow = resource.getScheduleFollow(); 
+	private Schedule<ScheduleUserKey> scheduleUser = resource.getScheduleUser();
 	private ScheduleFollowKey scheduleFollowKey;
+	private Long qq;
+	private Integer pageNum;
+	private String modUrl;
 
 	public VisitFollowTask(ScheduleFollowKey scheduleFollowKey) {
 		this.scheduleFollowKey = scheduleFollowKey;
+		qq = scheduleFollowKey.getQq();
+		pageNum = scheduleFollowKey.getPageNum();
+		modUrl = resource.getModUrl(qq);
 	}
-
+	
 	@Override
-	public void execute(){
-		fetchNewQq();
-	}
-
-	private void fetchNewQq() {
-		SubmitTask<List<Long>> getTask = new SubmitTask<List<Long>>() {
-			@Override
-			public List<Long> submit(WebDriverWrapper webDriverWrapper) {
-				if (!visit(webDriverWrapper)) {
-					return null;
-				}
-				switch (WebDriverUtil.verifyStatus(webDriverWrapper
-						.getWebDriver())) {
-				case NOLOGIN:
-					return handleNoLogin(webDriverWrapper);
-				case NOPRIVILEGE:
-					return handleNoProvilege(webDriverWrapper);
-				case PRIVILEGE:
-					return handleProvilege(webDriverWrapper);
-				}
-				return null;
-			}
-		};
+	protected boolean visit(WebDriverWrapper webDriverWrapper) {
 		
-		List<Long> qqs = resource.getPool().submit(getTask);
-		after(qqs);
-		
-	}
-
-	//访问页面，返回是否成功
-	private boolean visit(WebDriverWrapper webDriverWrapper) {
-		Long qq = scheduleFollowKey.getQq();
-		String modUrl = resource.getModUrl(qq);
-		
-		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
-		
-		//返回随机Cookie
-		CookieSnsStore cookieStore = resource.getCookieStorePool().getRandomCookies();
-		//没有可用Cookie
-		if (cookieStore == null) {
+		if (tryVisit(modUrl, webDriverWrapper)) {
+			return true;
+		}else{
 			reschaduleRela();
 			return false;
-		} else {
-			//应用随机Cookie
-			webDriverWrapper.applyCookieStore(cookieStore);
 		}
-		
-		int tryTime = 2;
-		do{
-			tryTime--;
-			try {
-				webDriver.get(modUrl);
-				return true;
+	}
+	
+	// 未登录状态的处理
+	@Override
+	protected List<Long> handleNoLogin(boolean hadTryLogin, WebDriverWrapper webDriverWrapper) {
+		log.info(WebDriverUtil.STATUS.NOLOGIN);
+		// 如果已经尝试登录过一次
+		if(hadTryLogin){
+			reschaduleRela();
+			return null;
+		}else{
+			try{
+				login(webDriverWrapper);
 			} catch (TimeoutException e) {
 				log.warn(e, e);
-				continue;
+				reschaduleRela();
+				return null;
 			}
-		}while(tryTime > 0);
-		return false;
-	}
-
-	// 未登录状态的处理
-	private List<Long> handleNoLogin(WebDriverWrapper webDriverWrapper) {
-		log.info(WebDriverUtil.STATUS.NOLOGIN);
-		CookieSnsStore cookieStore = webDriverWrapper.getCookieStore();
-		if (cookieStore != null) {
-			// 删除无用Cookie
-			resource.getCookieStorePool().deleteCookieStore(cookieStore);
-			// 设置webDriver的cookie为null
-			webDriverWrapper.setCookieStore(null);
+			return doVisit(true, webDriverWrapper);
 		}
-		reschaduleRela();
-		return null;
 	}
 
 	//无访问权限的处理
-	private List<Long> handleNoProvilege(WebDriverWrapper webDriverWrapper) {
+	@Override
+	protected List<Long> handleNoProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为无权访问
 		UserKey uk = new UserKey();
-		uk.setQq(scheduleFollowKey.getQq());
+		uk.setQq(qq);
 		uk.setVisitable(false);
 		resource.getStorage().insertDuplicate(uk);
 		return null;
 	}
 	
 	//有访问权限的处理
-	private List<Long> handleProvilege(WebDriverWrapper webDriverWrapper) {
+	@Override
+	protected List<Long> handleProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为有权访问
 		UserKey uk = new UserKey();
-		uk.setQq(scheduleFollowKey.getQq());
+		uk.setQq(qq);
 		uk.setVisitable(true);
 		resource.getStorage().insertDuplicate(uk);
 		
 		RemoteWebDriver webDriver =  webDriverWrapper.getWebDriver();
-		Long qq = scheduleFollowKey.getQq();
-		Integer pageNum = scheduleFollowKey.getPageNum();
 		webDriver.switchTo().frame(webDriver.findElement(By.xpath("//iframe[@class='app_canvas_frame']")));
 		
 		List<Long> qqs = null;
@@ -135,32 +100,48 @@ public class VisitFollowTask extends VisitTask {
 			try{
 				tryTime--;
 				//如果当前页不是1，current标签不是当前页
-				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']")).getText()) != pageNum){
+				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span")).getText()) != pageNum){
 					WebElement target = webDriver.findElement(By.xpath("//input[starts-with(@id,'pager_go')]"));
-					target.sendKeys(String.valueOf(pageNum));
-					webDriver.findElement(By.xpath("//button[starts-with(@id,'pager_gobtn')]")).click();
+					webDriver.executeScript("arguments[0].value='"+String.valueOf(pageNum)+"';", target);
+					webDriver.executeScript("arguments[0].click();", 
+							webDriver.findElement(By.xpath("//button[starts-with(@id,'pager_gobtn')]")));
 				}
 				
-				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']")).getText()) != pageNum){
-					TimeUtils.sleep(100);
+				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span")).getText()) != pageNum){
+					try {
+						TimeUtils.sleep(100);
+					} catch (InterruptedException e) {
+						throw new NPInterruptedException(e);
+					}
 					continue;
 				}
 				
 				qqs = new ArrayList<Long>();
 				for (WebElement element : webDriver.findElements(By.xpath("//div[@class='comments_content']/a[@class='nickname']"))) {
 					//提取QQ号
-					Long newQq = Long.parseLong(element.getAttribute("href").replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
-					if(!newQq.equals(qq)){
-						qqs.add(newQq);
+					String link = element.getAttribute("href");
+					if(link.contains("qzone")){//有可能是朋友网链接，不提取
+						Long newQq = Long.parseLong(link.replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
+						if(!newQq.equals(qq)){
+							qqs.add(newQq);
+						}
 					}
 				}
 				
 				// 判断是否有下一页，如果有，则调度
 				boolean hasNext = true;
-				for (WebElement element : webDriver.findElements(By.xpath("//div[@id='pager']//p[@class='mod_pagenav_main']/span"))) {
-					if(element.getAttribute("class") == "mod_pagenav_disable" && element.getText().contains("下一页")){
-						hasNext = false;
-						break;
+				WebElement pager = webDriver.findElement(By.xpath("//div[@id='pager']"));
+				if(pager.getAttribute("style").equals("display: none;")){//没有显示，肯定是没有下一页
+					hasNext = false;
+				}else{
+					for (WebElement element : webDriver.findElements(
+							By.xpath("//div[@id='pager']//p[@class='mod_pagenav_main']"))) {
+						//下一页被禁用，说明没有下一页
+						if(element.getAttribute("class") == "mod_pagenav_disable" 
+								&& element.findElement(By.xpath("/span")).getText().contains("下一页")){
+							hasNext = false;
+							break;
+						}
 					}
 				}
 				if(hasNext){
@@ -168,29 +149,48 @@ public class VisitFollowTask extends VisitTask {
 				}
 				
 				isOk = true;
-			}catch (StaleElementReferenceException e){
-				TimeUtils.sleep(100);
+			}catch (TimeoutException | StaleElementReferenceException e){
+				if(tryTime==0){
+					reschaduleRela();
+				}
+				try {
+					TimeUtils.sleep(100);
+				} catch (InterruptedException e1) {
+					throw new NPInterruptedException(e1);
+				}
 				continue;
 			}catch(NoSuchElementException e){
-				
+				break;
 			}
 		}while(!isOk && tryTime > 0);
-		
-		webDriver.switchTo().parentFrame();
+		webDriver.switchTo().defaultContent();
 		return qqs;
 	}
+
+	@Override
+	protected List<Long> handleException(WebDriverException  e,WebDriverWrapper webDriverWrapper) {
+		reschaduleRela();
+		throw e;
+	}
 	
-	private void after(List<Long> qqs){
-		Long qq = scheduleFollowKey.getQq();
-		Integer pageNum = scheduleFollowKey.getPageNum();
-		if (qqs == null || qqs.isEmpty()) {
+	@Override
+	protected List<Long> handleException(NPInterruptedException  e,WebDriverWrapper webDriverWrapper) {
+		reschaduleRela();
+		throw e;
+	}
+
+
+	@Override
+	protected void handleResult(List<Long> info) {
+		if (info == null || info.isEmpty()) {
 			return;
 		}
-		
+		LinkedHashSet<Long> qqsDeWeight = new LinkedHashSet<Long>();//去重
+		qqsDeWeight.addAll(info);
 		List<ScheduleUserKey> suks = new ArrayList<ScheduleUserKey>();
 		List<UserKey> uks = new ArrayList<UserKey>();
 		List<UserRelation> urs = new ArrayList<UserRelation>();
-		for (Iterator<Long> iterator = qqs.iterator(); iterator.hasNext();) {
+		for (Iterator<Long> iterator = qqsDeWeight.iterator(); iterator.hasNext();) {
 			Long newQq = iterator.next();
 			ScheduleUserKey suk = new ScheduleUserKey();
 			suk.setQq(newQq);
@@ -208,7 +208,9 @@ public class VisitFollowTask extends VisitTask {
 		resource.getStorage().insertIgnore(urs);
 		log.info("get follow, qq: " + qq + ", page: " + pageNum);
 	}
-
+	
+	
+	
 	//TODO
 	private void schadule(List<ScheduleUserKey> suks) {
 		scheduleUser.schadule(suks);
@@ -216,18 +218,21 @@ public class VisitFollowTask extends VisitTask {
 
 	// 重新添加VisitPeopleFollow任务
 	private void reschaduleRela() {
+		scheduleFollowKey.setId(null);
 		reschaduleRela(scheduleFollowKey);
 	}
 	
 	// 调度下一页的任务
 	private void schaduleNextRela() {
-		ScheduleFollowKey  scheduleFollowKey = new ScheduleFollowKey();
-		scheduleFollowKey.setQq(this.scheduleFollowKey.getQq());
-		scheduleFollowKey.setPageNum(this.scheduleFollowKey.getPageNum() + 1);
-		reschaduleRela(scheduleFollowKey);
+		ScheduleFollowKey newScheduleFollowKey = new ScheduleFollowKey();
+		newScheduleFollowKey.setQq(qq);
+		newScheduleFollowKey.setPageNum(pageNum + 1);
+		reschaduleRela(newScheduleFollowKey);
 	}
 	
 	private void reschaduleRela(ScheduleFollowKey scheduleFollowKey) {
 		scheduleFollow.reschadule(scheduleFollowKey);
 	}
+
+
 }

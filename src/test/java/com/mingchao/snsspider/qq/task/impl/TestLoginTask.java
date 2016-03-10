@@ -1,11 +1,31 @@
 package com.mingchao.snsspider.qq.task.impl;
 
-import com.mingchao.snsspider.qq.task.BaseTaskImpl;
-import com.mingchao.snsspider.qq.task.work.LoginTask;
+import com.mingchao.snsspider.http.SubmitTask;
+import com.mingchao.snsspider.http.WebDriverWrapper;
+import com.mingchao.snsspider.qq.common.Paraments;
+import com.mingchao.snsspider.qq.common.ParamentsProvider;
+import com.mingchao.snsspider.qq.resource.Resource;
+import com.mingchao.snsspider.qq.util.LoginUtil;
+import com.mingchao.snsspider.qq.util.WebDriverUtil.STATUS;
 
-public class TestLoginTask extends BaseTaskImpl{
-	
+public class TestLoginTask {
+
 	public static void main(String[] args) {
-		LoginTask.newRunnableTask().run();
+		Resource resource = Resource.getInstance();
+		try {
+			final Paraments para =ParamentsProvider.getInstance();
+			final String loginUrl = resource.getLoginUrl();
+			SubmitTask<STATUS> getTask = new SubmitTask<STATUS>(){
+				@Override
+				public STATUS submit(WebDriverWrapper webDriverWrapper) {
+					return LoginUtil.login(para, loginUrl, webDriverWrapper);
+				}
+			};
+			resource.getPool().submit(getTask );
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			resource.close();
+		}
 	}
 }

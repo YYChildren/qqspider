@@ -7,11 +7,9 @@ import javax.persistence.Id;
 
 import com.mingchao.snsspider.model.HadoopString;
 import com.mingchao.snsspider.model.IdAble;
-import com.mingchao.snsspider.model.ToBytes;
-import com.mingchao.snsspider.util.Numeric;
 
 @Entity(name="t_user_key")
-public class UserKey extends HadoopString implements ToBytes, IdAble{
+public class UserKey extends HadoopString implements  IdAble{
 	private Long id;
 	private Long qq;
 	private Boolean visitable;
@@ -36,10 +34,7 @@ public class UserKey extends HadoopString implements ToBytes, IdAble{
 	public String toHadoopString() {
 		return  convertNull(id) + "\t" + convertNull(qq) ;
 	}
-	@Override
-	public byte[] toBytes() {
-		return Numeric.toBytes(qq);
-	}
+
 	public Boolean getVisitable() {
 		return visitable;
 	}

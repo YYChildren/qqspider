@@ -2,13 +2,25 @@ package com.mingchao.snsspider.qq.common;
 
 
 public interface Paraments {
-	String getHadoopPath();
-	int getExecutorPoolSize();
-	int getWebDriverPoolSize();
-	int getCookiePoolSize();
-	int getBloomExected();
-	double getBloomFpp();
-	String getAppPath();
-	String getAccountUser();
-	String getAccountPassword();
+	public String getProjectName();
+
+	public String getProjectPath();
+
+	public String getHadoopPath();
+
+	public int getExecutorPoolSize();
+
+	public int getWebDriverPoolSize();
+
+	public int getCookiePoolSize();
+
+	public long getBloomExected();
+
+	public double getBloomFpp();
+
+	public String getBloomPath();
+
+	public String getAccountUser();
+
+	public String getAccountPassword();
 }
