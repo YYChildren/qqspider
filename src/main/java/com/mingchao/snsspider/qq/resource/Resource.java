@@ -28,8 +28,14 @@ public class Resource implements Closeable{
 	public void close() {
 		taskExcutor.close();// 关闭线程池
 		webDriverPool.close();//关闭webDriver 池
+		
+		scheduleUser.closing();
+		scheduleFollow.closing();
+		scheduleUser.dump();
+		scheduleFollow.dump();
 		scheduleUser.close();//关闭user 调度器
 		scheduleFollow.close();//关闭follow 调度器
+		
 		storage.close();//关闭hibernate
 		instance = null;
 	}

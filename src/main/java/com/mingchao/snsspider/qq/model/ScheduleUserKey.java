@@ -7,7 +7,6 @@ import javax.persistence.Id;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
-import com.mingchao.snsspider.model.HadoopString;
 import com.mingchao.snsspider.model.IdAble;
 
 /**
@@ -16,7 +15,7 @@ import com.mingchao.snsspider.model.IdAble;
  *
  */
 @Entity(name="t_schedule_user_key")
-public class ScheduleUserKey extends HadoopString implements IdAble{
+public class ScheduleUserKey implements IdAble{
 	private Long id;
 	private Long qq;
 
@@ -37,15 +36,9 @@ public class ScheduleUserKey extends HadoopString implements IdAble{
 	}
 	
 	@Override
-	public String toHadoopString() {
-		return  convertNull(id) + "\t" + convertNull(qq) ;
-	}
-	
-	@Override
 	public String toString() {
 		return "ScheduleUserKey [id=" + id + ", qq=" + qq + "]";
 	}
-	
 	public static Funnel<ScheduleUserKey> getFunnel(){
 		return ScheduleUserKeyFunnel.INSTANCE;
 	}

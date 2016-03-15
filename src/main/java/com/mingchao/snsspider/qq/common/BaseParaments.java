@@ -1,5 +1,7 @@
 package com.mingchao.snsspider.qq.common;
 
+import org.openqa.selenium.remote.RemoteWebDriver;
+
 import com.mingchao.snsspider.util.BloomFilterUtil;
 
 public class BaseParaments implements Paraments {
@@ -10,6 +12,7 @@ public class BaseParaments implements Paraments {
 	protected String projectPath=null;
 	protected String hadoopPath=null;
 	protected int executorPoolSize=POOL_SIZE;
+	protected Class<? extends RemoteWebDriver> webDriverClass;
 	protected int webDriverPoolSize=POOL_SIZE;
 	protected int cookiePoolSize=POOL_SIZE;
 	protected long bloomExected= BloomFilterUtil.EXPECTEDENTRIES;
@@ -60,5 +63,10 @@ public class BaseParaments implements Paraments {
 
 	public String getAccountPassword() {
 		return accountPassword;
+	}
+
+	@Override
+	public Class<? extends RemoteWebDriver> getWebDriverClass() {
+		return webDriverClass;
 	}
 }

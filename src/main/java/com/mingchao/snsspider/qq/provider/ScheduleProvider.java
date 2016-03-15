@@ -1,11 +1,12 @@
 package com.mingchao.snsspider.qq.provider;
 
+import com.mingchao.snsspider.model.QueueStatusImpl;
 import com.mingchao.snsspider.qq.common.Paraments;
 import com.mingchao.snsspider.qq.common.ParamentsProvider;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.schedule.Schedule;
-import com.mingchao.snsspider.schedule.ScheduleMySQL;
+import com.mingchao.snsspider.schedule.ScheduleDist;
 
 public class ScheduleProvider {
 
@@ -22,8 +23,9 @@ public class ScheduleProvider {
 
 	private static synchronized void initScheduleFollow() {
 		if (scheduleFollow == null) {
-			scheduleFollow = new ScheduleMySQL<ScheduleFollowKey>(
-					ScheduleFollowKey.class, ScheduleFollowKey.getFunnel(),
+			scheduleFollow = new ScheduleDist<ScheduleFollowKey>(
+					ScheduleFollowKey.class, QueueStatusImpl.class,
+					ScheduleFollowKey.getFunnel(),
 					paras.getBloomExected(), paras.getBloomFpp(),
 					paras.getBloomPath());
 		}
@@ -38,8 +40,9 @@ public class ScheduleProvider {
 
 	private static synchronized void initScheduleUser() {
 		if (scheduleUser == null) {
-			scheduleUser = new ScheduleMySQL<ScheduleUserKey>(
-					ScheduleUserKey.class, ScheduleUserKey.getFunnel(),
+			scheduleUser = new ScheduleDist<ScheduleUserKey>(
+					ScheduleUserKey.class, QueueStatusImpl.class,
+					ScheduleUserKey.getFunnel(),
 					paras.getBloomExected(), paras.getBloomFpp(),
 					paras.getBloomPath());
 		}

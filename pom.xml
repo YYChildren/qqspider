@@ -61,11 +61,11 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<!-- <targetPath>config/</targetPath> -->
-				<!-- 
+				<!--delete
 				<excludes>
 					<exclude>**/*</exclude>
 				</excludes>
-				 -->
+				 delete-->
 			</resource>
 		</resources>
 		<plugins>

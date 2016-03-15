@@ -1,23 +1,39 @@
 RESOURCE:=src/main/resources
 COMPILE_PATH:=target
 CLASSES_PATH:=target/classes
-TARGET_PATH:=/data/snsspider/qqspider
+TARGET_PATH:=~/data/snsspider/qqspider
 
+BEFOREDEPLOY_CMD:="/bin/rm -f $(TARGET_PATH)/config/*.* $(TARGET_PATH)/lib/*.* $(TARGET_PATH)/*.* $(TARGET_PATH)/spiderctl"
+CP_CMD1:="/bin/cp -Rf $(COMPILE_PATH)/lib/*.* $(TARGET_PATH)/lib"
+CP_CMD2:="/bin/cp -Rf spiderctl $(COMPILE_PATH)/*.jar $(TARGET_PATH)/"
 
-all:before package setting cp
+all:before package deploy
 
 clean:
-	mvn clean
+	@mvn clean
+	@sed -i 's/<!--beforedel-->/<!--delete/g' pom.xml
+	@sed -i 's/<!--afterdel-->/delete-->/g' pom.xml
 
 before:
-	@mkdir -p $(TARGET_PATH) $(TARGET_PATH)/config
+	@mkdir -p $(TARGET_PATH) $(TARGET_PATH)/config $(TARGET_PATH)/lib
+	@sed -i 's/<!--delete/<!--beforedel-->/g' pom.xml
+	@sed -i 's/delete-->/<!--afterdel-->/g' pom.xml
 
 package:
 	mvn package
 
+beforedeploy:
+	@(echo $(BEFOREDEPLOY_CMD)) 
+	@(/bin/rm -f $(TARGET_PATH)/config/*.* $(TARGET_PATH)/lib/*.* $(TARGET_PATH)/*.* $(TARGET_PATH)/spiderctl)
+
+deploy:beforedeploy setting cp
+
 setting:
-	@mv $(RESOURCE)/*.* $(TARGET_PATH)/config/
+	@cp $(RESOURCE)/*.* $(TARGET_PATH)/config/
 
 cp:
 	chmod +x spiderctl
-	@cp -Rf spiderctl $(COMPILE_PATH)/*.jar $(COMPILE_PATH)/lib $(TARGET_PATH)/
+	@(echo "$(CP_CMD1)") 
+	@(sudo /bin/cp -Rf $(COMPILE_PATH)/lib/*.* $(TARGET_PATH)/lib)
+	@(echo "$(CP_CMD2)") 
+	@(sudo /bin/cp -Rf spiderctl $(COMPILE_PATH)/*.jar $(TARGET_PATH)/)

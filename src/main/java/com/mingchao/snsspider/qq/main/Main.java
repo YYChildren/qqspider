@@ -15,22 +15,33 @@ import com.mingchao.snsspider.util.Crawlable;
 
 public class Main {
 	private static Log log = LogFactory.getLog(Main.class);
+	private static final int PORT=6666;
+	
 	@SuppressWarnings("unused")
 	private static Paraments para = ParamentsProvider.getInstance(); 
 	public static void main(String[] args) {
 		int status = 0;
+		String command;
+		int port = PORT;
 		try {
-			String command = args[0];
-			int port =6666;
-			Main mainObject = new Main(port);
-			switch (command) {
-			case "start":
-				mainObject.start();
-				mainObject.stop();
+			switch(args.length){
+			case 2:
+				port = Integer.parseInt(args[1]);
+			case 1:
+				command = args[0];
+				Main mainObject = new Main(port);
+				switch (command) {
+				case "start":
+					mainObject.start();
+					mainObject.stop();
+					break;
+				case "stop":
+					mainObject.close();
+					break;
+				}
 				break;
-			case "stop":
-				mainObject.close();
-				break;
+			default:
+				System.err.println("Argument: [start/stop] [port]");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -40,11 +51,11 @@ public class Main {
 		System.exit(status);
 	}
 	
-	
-	private int port =6666;
+	private int port;
 	private Registry reg;
 	
 	public Main(){
+		this(PORT);
 	}
 	
 	public Main(int port){

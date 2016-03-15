@@ -1,4 +1,5 @@
 package com.mingchao.snsspider.qq.common;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 
 public interface Paraments {
@@ -10,6 +11,8 @@ public interface Paraments {
 
 	public int getExecutorPoolSize();
 
+	public Class<? extends RemoteWebDriver> getWebDriverClass();
+	
 	public int getWebDriverPoolSize();
 
 	public int getCookiePoolSize();

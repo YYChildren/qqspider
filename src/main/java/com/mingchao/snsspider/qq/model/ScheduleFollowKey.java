@@ -19,6 +19,7 @@ public class ScheduleFollowKey implements IdAble {
 	private Long id;
 	private Long qq;
 	private Integer pageNum;
+	
 
 	public ScheduleFollowKey(){
 	}

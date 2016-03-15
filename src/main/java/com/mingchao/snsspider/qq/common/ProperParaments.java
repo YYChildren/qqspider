@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.openqa.selenium.remote.RemoteWebDriver;
+
 import com.mingchao.snsspider.logging.Log;
 import com.mingchao.snsspider.logging.LogFactory;
 
@@ -16,6 +18,7 @@ public class ProperParaments extends BaseParaments {
 	public static final String HADOOP_BASEPATH = "hadoop.basepath";// 文件存储路径
 
 	public static final String EXECUTOR_POOL_SIZE = "executor.pool.size";// 线程池数量
+	public static final String WEBDRIVER_CLASS = "webdriver.class";// webDriver
 	public static final String WEBDRIVER_POOL_SIZE = "webdriver.pool.size";// webDriver
 																			// 池数量
 	public static final String COOKIE_POOL_SIZE = "cookie.pool.size";// Cookie池大小
@@ -57,6 +60,7 @@ public class ProperParaments extends BaseParaments {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void setParaments(String key, String value) {
 		switch (key) {
 		case PROJECT_NAME:
@@ -70,6 +74,13 @@ public class ProperParaments extends BaseParaments {
 			break;
 		case EXECUTOR_POOL_SIZE:
 			this.executorPoolSize = Integer.parseInt(value);
+			break;
+		case WEBDRIVER_CLASS:
+			try {
+				this.webDriverClass = (Class<? extends RemoteWebDriver>) Class.forName(value);
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
 			break;
 		case WEBDRIVER_POOL_SIZE:
 			this.webDriverPoolSize = Integer.parseInt(value);

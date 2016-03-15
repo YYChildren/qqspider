@@ -1,6 +1,9 @@
 #!/bin/bash
 
 MAIN_CLASS=com.mingchao.snsspider.qq.main.Main
+PARAS="-Djava.ext.dirs=./:./lib"
+EXE_PATH=`dirname $0`
+
 
 help(){
     echo "使用说明"
@@ -8,22 +11,34 @@ help(){
     echo "命令模块："
     echo "help                      显示当前帮助内容"
     echo "start                     start相关操作"
-    echo "stop                      stop相关操作"
+    echo "stop                     stop相关操作"
+    echo "start port              start相关操作，指定用于关闭的端口"
+    echo "stop port              stop相关操作，指定用于关闭的端口"
+    echo "config                    编译配置文件"
     exit 0
 }
 
 start_spider(){
-    setsid java -Djava.ext.dirs=./lib -cp ./config:*.jar $MAIN_CLASS start
+    config_spider
+    setsid java $PARAS $MAIN_CLASS start $*
 }
 
 stop_spider(){
-    java -Djava.ext.dirs=./lib -cp ./config:*.jar $MAIN_CLASS stop
+    config_spider
+    java $PARAS $MAIN_CLASS stop $*
+}
+config_spider(){
+    cd config
+    jar -Mcvf ../config.jar `ls | grep -v *.jar | tr '\n' ' '`
+    cd ../
 }
 
 if [ $# -eq 0 ]; then
     help
 fi
 
+## 切换到执行目录
+cd $EXE_PATH
 ## 获取子shell命令
 TARGET=$1
 shift
@@ -31,5 +46,6 @@ case $TARGET in
     help) help ;;
     start) start_spider $*;;
     stop) stop_spider $*;;
+    config) config_spider;;
     *) help ;;
 esac
