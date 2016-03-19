@@ -13,10 +13,10 @@ public class Spider implements Crawlable {
 	private CloseableThread visitFollowThread;
 	private Resource resource = Resource.getInstance();
 
-	private Main mainObject;
+	private NotifyStopAble notifyStopAble;
 
-	public Spider(Main mainObject) {
-		this.mainObject = mainObject;
+	public Spider(NotifyStopAble notifyStopAble) {
+		this.notifyStopAble = notifyStopAble;
 	}
 
 	public void crawl() {
@@ -49,7 +49,7 @@ public class Spider implements Crawlable {
 		resource.close();
 
 		// 通知关闭主线程，程序结束
-		mainObject.notifyStop();
+		notifyStopAble.notifyStop();
 	}
 
 }

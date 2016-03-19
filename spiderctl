@@ -1,9 +1,18 @@
 #!/bin/bash
+source ~/bashrc
+
+EXE_PATH=`dirname $0`
+PARAS="-Djava.ext.dirs=./:./lib:$JAVA_HOME/lib"
+
+IP=`ifconfig -a eth0 | grep 'inet ' | awk '{print $2}' | cut -d ':' -f 2`
+PORT=50013
+JMX_PARA="-Dcom.sun.management.jmxremote=true \
+-Djava.rmi.server.hostname=$IP \
+-Dcom.sun.management.jmxremote.port=$PORT \
+-Dcom.sun.management.jmxremote.ssl=false \
+-Dcom.sun.management.jmxremote.authenticate=false"
 
 MAIN_CLASS=com.mingchao.snsspider.qq.main.Main
-PARAS="-Djava.ext.dirs=./:./lib"
-EXE_PATH=`dirname $0`
-
 
 help(){
     echo "使用说明"
@@ -11,22 +20,21 @@ help(){
     echo "命令模块："
     echo "help                      显示当前帮助内容"
     echo "start                     start相关操作"
-    echo "stop                     stop相关操作"
-    echo "start port              start相关操作，指定用于关闭的端口"
-    echo "stop port              stop相关操作，指定用于关闭的端口"
+    echo "stop                      stop相关操作"
     echo "config                    编译配置文件"
     exit 0
 }
 
 start_spider(){
     config_spider
-    setsid java $PARAS $MAIN_CLASS start $*
+    setsid java $PARAS $JMX_PARA $MAIN_CLASS start $* &
 }
 
 stop_spider(){
     config_spider
     java $PARAS $MAIN_CLASS stop $*
 }
+
 config_spider(){
     cd config
     jar -Mcvf ../config.jar `ls | grep -v *.jar | tr '\n' ' '`

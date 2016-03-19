@@ -34,6 +34,6 @@ setting:
 cp:
 	chmod +x spiderctl
 	@(echo "$(CP_CMD1)") 
-	@(sudo /bin/cp -Rf $(COMPILE_PATH)/lib/*.* $(TARGET_PATH)/lib)
+	@(/bin/cp -Rf $(COMPILE_PATH)/lib/*.* $(TARGET_PATH)/lib)
 	@(echo "$(CP_CMD2)") 
-	@(sudo /bin/cp -Rf spiderctl $(COMPILE_PATH)/*.jar $(TARGET_PATH)/)
+	@(/bin/cp -Rf spiderctl $(COMPILE_PATH)/*.jar $(TARGET_PATH)/)
