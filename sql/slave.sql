@@ -1,0 +1,34 @@
+CREATE DATABASE IF NOT EXISTS `db_qqspider`;
+ GRANT ALL PRIVILEGES ON `db_qqspider`.* TO 'spideradmin'@'%' IDENTIFIED BY '2016spider';
+USE `db_qqspider`;
+
+CREATE TABLE IF NOT EXISTS `t_user_key` (
+	`id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+	`qq` BIGINT NOT NULL,
+	`visitable` BOOL,
+	UNIQUE KEY `user_key_qq`(`qq`)
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `t_user_relation` (
+	`id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+	`qq` BIGINT NOT NULL,
+	`oqq` BIGINT NOT NULL,
+	UNIQUE KEY `user_relation_qq_oqq`(`qq`,`oqq`)
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `t_queue_status`(
+	`tablename` VARCHAR(32) PRIMARY KEY,
+	`idstart` BIGINT,
+	`idend` BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS `t_schedule_user_key` (
+	`id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+	`qq` BIGINT NOT NULL
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `t_schedule_follow_key` (
+	`id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+	`qq` BIGINT NOT NULL,
+	`pageNum` INT NOT NULL
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
