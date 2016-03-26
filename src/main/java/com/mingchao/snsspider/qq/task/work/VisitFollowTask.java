@@ -14,7 +14,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.mingchao.snsspider.exception.NPInterruptedException;
-import com.mingchao.snsspider.http.WebDriverWrapper;
+import com.mingchao.snsspider.http.webdriver.WebDriverWrapper;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.qq.model.UserKey;

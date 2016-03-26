@@ -1,32 +1,29 @@
 package com.mingchao.snsspider.qq.resource;
 
+import org.springframework.beans.factory.annotation.Required;
+
 import com.mingchao.snsspider.executor.TaskExcutor;
-import com.mingchao.snsspider.http.WebDriverPool;
+import com.mingchao.snsspider.http.webdriver.WebDriverPool;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
-import com.mingchao.snsspider.qq.provider.ScheduleProvider;
-import com.mingchao.snsspider.qq.provider.StorageProvider;
-import com.mingchao.snsspider.qq.provider.TaskExecutorProvider;
-import com.mingchao.snsspider.qq.provider.WebDriverProvider;
 import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.storage.Storage;
 import com.mingchao.snsspider.util.Closeable;
 
 public class Resource implements Closeable{
-	//只用Resource 单例，其他资源是否单例由Resource控制
-	private static Resource instance;
-	private TaskExcutor taskExcutor = TaskExecutorProvider.newInstance();
-	private WebDriverPool webDriverPool = WebDriverProvider.newInstance();
-	private Storage storage = StorageProvider.newMySQLStorage();
-	private Schedule<ScheduleFollowKey> scheduleFollow = ScheduleProvider.getScheduleFollow();
-	private Schedule<ScheduleUserKey> scheduleUser = ScheduleProvider.getScheduleUser();
+	private TaskExcutor taskExecutor;
+	private WebDriverPool webDriverPool;
+	private Storage storage;
+	private Storage storageMongo;
+	private Schedule<ScheduleFollowKey> scheduleFollow;
+	private Schedule<ScheduleUserKey> scheduleUser;
 
-	private Resource() {
+	public Resource() {
 	}
 
 	@Override
 	public void close() {
-		taskExcutor.close();// 关闭线程池
+		taskExecutor.close();// 关闭线程池
 		webDriverPool.close();//关闭webDriver 池
 		
 		scheduleUser.closing();
@@ -37,44 +34,60 @@ public class Resource implements Closeable{
 		scheduleFollow.close();//关闭follow 调度器
 		
 		storage.close();//关闭hibernate
-		instance = null;
 	}
 
-	public static Resource getInstance() {
-		if (instance == null) {
-			init();
-		}
-		return instance;
+	public TaskExcutor getTaskExecutor() {
+		return taskExecutor;
 	}
 
-	private static synchronized void init() {
-		if (instance == null) {
-			instance = new Resource();
-		}
-	}
-
-	public Storage getStorage() {
-		return storage;
-	}
-
-	public TaskExcutor getTaskExcutor() {
-		return taskExcutor;
+	@Required
+	public void setTaskExecutor(TaskExcutor taskExecutor) {
+		this.taskExecutor = taskExecutor;
 	}
 
 	public WebDriverPool getWebDriverPool() {
 		return webDriverPool;
 	}
 
-	public WebDriverPool getPool() {
-		return webDriverPool;
+	@Required
+	public void setWebDriverPool(WebDriverPool webDriverPool) {
+		this.webDriverPool = webDriverPool;
+	}
+
+	public Storage getStorage() {
+		return storage;
+	}
+
+	@Required
+	public void setStorage(Storage storage) {
+		this.storage = storage;
+	}
+	
+	public Storage getStorageMongo() {
+		return storageMongo;
+	}
+
+	@Required
+	public void setStorageMongo(Storage mongoStorage) {
+		this.storageMongo = mongoStorage;
 	}
 	
 	public Schedule<ScheduleFollowKey> getScheduleFollow() {
 		return scheduleFollow;
 	}
 
+	@Required
+	public void setScheduleFollow(Schedule<ScheduleFollowKey> scheduleFollow) {
+		this.scheduleFollow = scheduleFollow;
+	}
+
 	public Schedule<ScheduleUserKey> getScheduleUser() {
 		return scheduleUser;
+	}
+	
+	@Required
+	public void setScheduleUser(Schedule<ScheduleUserKey> scheduleUser) {
+		this.scheduleUser = scheduleUser;
 	}
 
 	public String getLoginUrl(){

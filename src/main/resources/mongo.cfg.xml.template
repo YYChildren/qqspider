@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+		<!-- Database connection settings -->
+		<property name="transaction.factory_class">org.hibernate.transaction.JTATransactionFactory</property>
+		<property name="transaction.jta.platform">org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform</property>
+		<property name="ogm.datastore.provider">mongodb</property>
+		<property name="ogm.datastore.host">host:port</property>
+		<property name="ogm.datastore.database">database</property>
+		<!-- <property name="ogm.datastore.username"></property>
+		<property name="ogm.datastore.password"></property>
+		<property name="ogm.error_handler"></property>
+		<property name="ogm.mongodb.connection_timeout"></property>
+		<property name="ogm.mongodb.authentication_mechanism"></property>
+		<property name="ogm.datastore.document.association_storage"></property>
+		<property name="ogm.mongodb.association_document_storage"></property>
+		<property name="ogm.mongodb.write_concern"></property>
+		<property name="ogm.mongodb.write_concern_type"></property>
+		<property name="ogm.mongodb.read_preference"></property> -->
+		
+		<property name="connection.pool_size">16</property>
+		
+		<!-- Enable Hibernate's automatic session context management -->
+		<property name="current_session_context_class">thread</property>
+
+		<!-- Echo all executed SQL to stdout -->
+		<property name="show_sql">true</property>
+
+		<mapping class="com.mingchao.snsspider.qq.model.UserKey" />
+		<mapping class="com.mingchao.snsspider.qq.model.UserRelation" />
+		<mapping class="com.mingchao.snsspider.qq.model.ScheduleUserKey" />
+		<mapping class="com.mingchao.snsspider.qq.model.ScheduleFollowKey" />
+		<mapping class="com.mingchao.snsspider.model.QueueStatusImpl" />
+	</session-factory>
+</hibernate-configuration>

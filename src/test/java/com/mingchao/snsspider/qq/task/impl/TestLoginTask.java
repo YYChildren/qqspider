@@ -1,9 +1,9 @@
 package com.mingchao.snsspider.qq.task.impl;
 
-import com.mingchao.snsspider.http.SubmitTask;
-import com.mingchao.snsspider.http.WebDriverWrapper;
+import com.mingchao.snsspider.http.webdriver.SubmitTask;
+import com.mingchao.snsspider.http.webdriver.WebDriverWrapper;
 import com.mingchao.snsspider.qq.common.Paraments;
-import com.mingchao.snsspider.qq.common.ParamentsProvider;
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
 import com.mingchao.snsspider.qq.util.LoginUtil;
 import com.mingchao.snsspider.qq.util.WebDriverUtil.STATUS;
@@ -11,9 +11,9 @@ import com.mingchao.snsspider.qq.util.WebDriverUtil.STATUS;
 public class TestLoginTask {
 
 	public static void main(String[] args) {
-		Resource resource = Resource.getInstance();
+		Resource resource = ResourceProvider.INSTANCE.getResource();
 		try {
-			final Paraments para =ParamentsProvider.getInstance();
+			final Paraments para = ResourceProvider.INSTANCE.getParaments();
 			final String loginUrl = resource.getLoginUrl();
 			SubmitTask<STATUS> getTask = new SubmitTask<STATUS>(){
 				@Override
@@ -21,7 +21,7 @@ public class TestLoginTask {
 					return LoginUtil.login(para, loginUrl, webDriverWrapper);
 				}
 			};
-			resource.getPool().submit(getTask );
+			resource.getWebDriverPool().submit(getTask );
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

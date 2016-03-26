@@ -1,7 +1,10 @@
 package com.mingchao.snsspider.qq.main;
 
 import com.mingchao.snsspider.executor.CloseableThread;
-import com.mingchao.snsspider.logging.LogFactory;
+
+import org.apache.commons.logging.LogFactory;
+
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
 import com.mingchao.snsspider.qq.task.schedule.SchaduleDispatchFollowTask;
 import com.mingchao.snsspider.qq.task.schedule.SchaduleVisitFollowTask;
@@ -11,7 +14,7 @@ import com.mingchao.snsspider.util.Crawlable;
 public class Spider implements Crawlable {
 	private CloseableThread dispatchFollowThread;
 	private CloseableThread visitFollowThread;
-	private Resource resource = Resource.getInstance();
+	private Resource resource = ResourceProvider.INSTANCE.getResource();
 
 	private NotifyStopAble notifyStopAble;
 

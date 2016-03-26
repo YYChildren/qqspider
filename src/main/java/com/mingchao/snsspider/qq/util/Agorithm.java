@@ -3,11 +3,11 @@ package com.mingchao.snsspider.qq.util;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.mingchao.snsspider.http.HttpResource;
+import com.mingchao.snsspider.http.httpclient.HttpClientPool;
 
 public class Agorithm {
 	
-	public static long g_tk(String urlStr,HttpResource resource) throws MalformedURLException {
+	public static long g_tk(String urlStr,HttpClientPool resource) throws MalformedURLException {
 	    URL url = new URL(urlStr);
 	    String skey = null;
 	    if (url != null){

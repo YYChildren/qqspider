@@ -1,9 +1,5 @@
- # the process id of qqspider will store as ${project.path}/${project.name}.pid
-project.name=qqspider
-project.path=setpath
-
-# not use
-hadoop.basepath=yourpath
+# pid file
+pidfile=/data/home/yangchaojun/data/snsspider/qqspider/qqspider.pid
 
 # thread number
 executor.pool.size=8
@@ -13,6 +9,10 @@ webdriver.pool.size=4
 # webdriver, you can select what you want. Usaually we set PhantomJSDriver in linux and ChromeDriver in Windows.   
 # webdriver.class=org.openqa.selenium.phantomjs.PhantomJSDriver
 webdriver.class=org.openqa.selenium.chrome.ChromeDriver
+webdriver.script.timeout=4
+webdriver.implicitly.wait=4
+webdriver.pageload.timeout=8
+
 
 # expected qq count
 bloom.expected=50000000

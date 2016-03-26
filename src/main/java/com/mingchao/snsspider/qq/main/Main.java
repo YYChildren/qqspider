@@ -1,27 +1,32 @@
 package com.mingchao.snsspider.qq.main;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
-import com.mingchao.snsspider.logging.Log;
-import com.mingchao.snsspider.logging.LogFactory;
+import org.apache.commons.codec.Charsets;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.common.io.Files;
 import com.mingchao.snsspider.main.SpiderJmxLuncher;
 import com.mingchao.snsspider.main.SpiderLuncher;
 import com.mingchao.snsspider.qq.common.Paraments;
-import com.mingchao.snsspider.qq.common.ParamentsProvider;
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.util.Crawlable;
 
 public class Main {
 	private static Log log = LogFactory.getLog(Main.class);
-	private static Paraments para = ParamentsProvider.getInstance(); 
+	private static Paraments para = ResourceProvider.INSTANCE.getParaments();
+
 	public static void main(String[] args) {
 		int status = 0;
 		String command;
 		try {
-			switch(args.length){
+			switch (args.length) {
 			case 1:
 				command = args[0];
 				switch (command) {
@@ -49,66 +54,82 @@ public class Main {
 		}
 		System.exit(status);
 	}
-	
-	private static void savePid() throws IOException{
-		String pidPath = ensuredPidPath();
+
+	private static void savePid() throws IOException {
+		String path = para.getPidFile();
+		File file = new File(path);
+		if (file.exists()) {
+			String oldPid = readPid();
+			InputStream in = Runtime.getRuntime().exec("jps").getInputStream();
+			BufferedReader b = new BufferedReader(new InputStreamReader(in));
+			String line = null;
+			boolean processExists = false;
+			while ((line = b.readLine()) != null) {
+				if(oldPid.equals(line.split("\\s+")[0])){
+					processExists = true;
+					break;
+				}
+			}
+			in.close();
+			if (processExists) {
+				throw new IOException("qqspider is alive! Pid is " + oldPid );
+			}
+		}else{
+			Files.createParentDirs(file);
+		}
 		String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-		Files.write(Paths.get(pidPath), pid.getBytes());
+		Files.write(pid, file, Charsets.UTF_8);
 	}
-	
-	private static String readPid() throws IOException{
-		String pidPath = ensuredPidPath();
-		String pid = new String(Files.readAllBytes(Paths.get(pidPath)));
-		return pid;
+
+	private static String readPid() throws IOException {
+		String path = para.getPidFile();
+		File file = new File(path);
+		return Files.readFirstLine(file, Charsets.UTF_8);
 	}
-	
-	private static void deletePidFile() throws IOException{
-		String pidPath = ensuredPidPath();
-		Files.delete(Paths.get(pidPath));
-	}
-	
-	private static String ensuredPidPath() throws IOException{
-		String path = para.getProjectPath();
-		Files.createDirectories(Paths.get(path));
-		String project = para.getProjectName();
-		String pidPath = path + File.separator + project + ".pid";
-		return pidPath;
+
+	private static void deletePidFile() throws IOException {
+		String path = para.getPidFile();
+		File file = new File(path);
+		if (file.exists()) {
+			file.delete();
+		}
 	}
 }
 
-class SpiderServer implements NotifyStopAble{
+class SpiderServer implements NotifyStopAble {
 	private Crawlable spider;
 	private SpiderLuncher spiderLuncher;
-	
-	SpiderServer(){
+
+	SpiderServer() {
 		spider = new Spider(this);
 		spiderLuncher = new SpiderJmxLuncher(spider);
 	}
-	
-	void start(){
+
+	void start() {
 		spiderLuncher.startServer();
 		spider.crawl();
 	}
 
-	synchronized void stop() throws InterruptedException{
+	synchronized void stop() throws InterruptedException {
 		wait();
 		spiderLuncher.stopServer();
 	}
-	
+
 	@Override
-	public synchronized void notifyStop(){
+	public synchronized void notifyStop() {
 		notify();
 	}
-	
+
 }
 
-class SpiderCloseClient{
+class SpiderCloseClient {
 	private SpiderLuncher spiderLuncher;
-	SpiderCloseClient(String pid){
+
+	SpiderCloseClient(String pid) {
 		spiderLuncher = new SpiderJmxLuncher(pid);
 	}
+
 	void close() {
 		spiderLuncher.close();
 	}
 }
-

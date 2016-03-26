@@ -1,12 +1,13 @@
 package com.mingchao.snsspider.qq.task.impl;
 
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
 import com.mingchao.snsspider.qq.task.work.VisitPeopleTask;
 
 public class TestVisitPeopleTask {
 	public static void main(String[] args) {
-		Resource resource = Resource.getInstance();
+		Resource resource = ResourceProvider.INSTANCE.getResource();
 		ScheduleUserKey suk = new ScheduleUserKey();
 		suk.setQq(1946231687L);
 		try {

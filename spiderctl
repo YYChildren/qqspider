@@ -37,7 +37,7 @@ stop_spider(){
 
 config_spider(){
     cd config
-    jar -Mcvf ../config.jar `ls | grep -v *.jar | tr '\n' ' '`
+    jar -Mcvf ../config.jar `ls *.properties *.xml | tr '\n' ' '`
     cd ../
 }
 

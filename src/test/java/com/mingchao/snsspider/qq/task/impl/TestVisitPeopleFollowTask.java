@@ -1,12 +1,13 @@
 package com.mingchao.snsspider.qq.task.impl;
 
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
 import com.mingchao.snsspider.qq.task.work.VisitFollowTask;
 
 public class TestVisitPeopleFollowTask {
 	public static void main(String[] args) {
-		Resource resource = Resource.getInstance();
+		Resource resource = ResourceProvider.INSTANCE.getResource();
 		ScheduleFollowKey uk = new ScheduleFollowKey();
 		//uk.setQq(31945L);//没发表说说
 		//uk.setPageNum(1);

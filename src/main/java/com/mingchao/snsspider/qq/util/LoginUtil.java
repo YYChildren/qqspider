@@ -4,7 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import com.mingchao.snsspider.http.WebDriverWrapper;
+import com.mingchao.snsspider.http.webdriver.WebDriverWrapper;
 import com.mingchao.snsspider.qq.common.Paraments;
 import com.mingchao.snsspider.qq.util.WebDriverUtil.STATUS;
 

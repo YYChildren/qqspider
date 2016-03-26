@@ -14,7 +14,7 @@ public class SchaduleDispatchFollowTask extends BaseCloseableTask {
 
 	private boolean run = true;
 	private Schedule<ScheduleUserKey> scheduleUser = resource.getScheduleUser();
-	private TaskExcutor executor = resource.getTaskExcutor();
+	private TaskExcutor executor = resource.getTaskExecutor();
 
 	@Override
 	public void execute() throws IOException {
@@ -29,6 +29,8 @@ public class SchaduleDispatchFollowTask extends BaseCloseableTask {
 			} catch (InterruptedException | NPInterruptedException e) {
 				log.debug(e, e);
 				break;
+			} catch(Exception e){
+				log.warn(e, e);
 			}
 		}
 		log.warn(Thread.currentThread() + " Stoped");

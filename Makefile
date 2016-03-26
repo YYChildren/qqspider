@@ -11,13 +11,9 @@ all:before package deploy
 
 clean:
 	@mvn clean
-	@sed -i 's/<!--beforedel-->/<!--delete/g' pom.xml
-	@sed -i 's/<!--afterdel-->/delete-->/g' pom.xml
 
 before:
 	@mkdir -p $(TARGET_PATH) $(TARGET_PATH)/config $(TARGET_PATH)/lib
-	@sed -i 's/<!--delete/<!--beforedel-->/g' pom.xml
-	@sed -i 's/delete-->/<!--afterdel-->/g' pom.xml
 
 package:
 	mvn package

@@ -6,8 +6,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 
-import com.mingchao.snsspider.http.CookieSns;
-import com.mingchao.snsspider.http.CookieSnsStore;
+import com.mingchao.snsspider.http.cookie.CookieSns;
+import com.mingchao.snsspider.http.cookie.CookieSnsStore;
 
 public class WebDriverUtil {
 	

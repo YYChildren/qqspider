@@ -7,16 +7,16 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.exception.WebDriverCosingException;
-import com.mingchao.snsspider.http.SubmitTask;
-import com.mingchao.snsspider.http.WebDriverPool;
-import com.mingchao.snsspider.http.WebDriverWrapper;
+import com.mingchao.snsspider.http.webdriver.SubmitTask;
+import com.mingchao.snsspider.http.webdriver.WebDriverPool;
+import com.mingchao.snsspider.http.webdriver.WebDriverWrapper;
 import com.mingchao.snsspider.qq.common.Paraments;
-import com.mingchao.snsspider.qq.common.ParamentsProvider;
+import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.util.WebDriverUtil;
 
 public abstract class VisitTask<T> extends BaseTaskImpl {
-	protected Paraments para = ParamentsProvider.getInstance();
-	protected WebDriverPool pool = resource.getPool();
+	protected Paraments para = ResourceProvider.INSTANCE.getParaments();
+	protected WebDriverPool pool = resource.getWebDriverPool();
 	
 	@Override
 	public void execute() {

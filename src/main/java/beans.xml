@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="properties"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>application.properties</value>
+		</property>
+	</bean>
+	
+	<bean id="paraments" class="com.mingchao.snsspider.qq.common.BaseParaments">
+		<property name="pidFile" value="${pidfile}"/>
+		<property name="accountUser" value="${acount.user}"/>
+		<property name="accountPassword" value="${acount.password}"/>
+	</bean>
+
+	<bean id="storageMongo" class="com.mingchao.snsspider.storage.db.StorageDB"  lazy-init="true">
+		<constructor-arg index="0">
+			<bean class="com.mingchao.snsspider.storage.util.HibernateUtilNoSQL">
+				<constructor-arg index="0" value="mongo.cfg.xml" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean id="storageSlave" class="com.mingchao.snsspider.storage.db.StorageMySQL"  lazy-init="true">
+		<constructor-arg index="0">
+			<bean class="com.mingchao.snsspider.storage.util.HibernateUtilJdbc">
+				<constructor-arg index="0" value="slave.cfg.xml" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean id="storageMaster" class="com.mingchao.snsspider.storage.db.StorageMySQL"  lazy-init="true">
+		<constructor-arg index="0">
+			<bean class="com.mingchao.snsspider.storage.util.HibernateUtilJdbc">
+				<constructor-arg index="0" value="master.cfg.xml" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean id="scheduleFollow" class="com.mingchao.snsspider.schedule.ScheduleDist"  lazy-init="true">
+		<constructor-arg index="0"
+			value="com.mingchao.snsspider.qq.model.ScheduleFollowKey" />
+		<constructor-arg index="1"
+			value="com.mingchao.snsspider.model.QueueStatusImpl" />
+		<constructor-arg index="2">
+			<!-- 获取方法返回值：调用valueGenerator的getStaticValue方法 -->
+			<bean
+				class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+				<property name="targetClass"
+					value="com.mingchao.snsspider.qq.model.ScheduleFollowKey" />
+				<property name="targetMethod" value="getFunnel" />
+			</bean>
+		</constructor-arg>
+		<constructor-arg index="3" value="${bloom.expected}" />
+		<constructor-arg index="4" value="${bloom.fpp}" />
+		<constructor-arg index="5" value="${bloom.path}" />
+		<property name="storageSlave" ref="storageSlave" />
+		<property name="storageMaster" ref="storageMaster" />
+	</bean>
+
+	<bean id="scheduleUser" class="com.mingchao.snsspider.schedule.ScheduleDist"  lazy-init="true">
+		<constructor-arg index="0"
+			value="com.mingchao.snsspider.qq.model.ScheduleUserKey" />
+		<constructor-arg index="1"
+			value="com.mingchao.snsspider.model.QueueStatusImpl" />
+		<constructor-arg index="2">
+			<!-- 获取方法返回值：调用targetMethod的getFunnel方法 -->
+			<bean
+				class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+				<property name="targetClass"
+					value="com.mingchao.snsspider.qq.model.ScheduleUserKey" />
+				<property name="targetMethod" value="getFunnel" />
+			</bean>
+		</constructor-arg>
+		<constructor-arg index="3" value="${bloom.expected}" />
+		<constructor-arg index="4" value="${bloom.fpp}" />
+		<constructor-arg index="5" value="${bloom.path}" />
+		<property name="storageSlave" ref="storageSlave" />
+		<property name="storageMaster" ref="storageMaster" />
+	</bean>
+
+	<bean id="taskExecutor" class="com.mingchao.snsspider.executor.BaseTaskExcutor"  lazy-init="true">
+		<constructor-arg index="0" value="${executor.pool.size}" />
+	</bean>
+
+    <bean id="webDriverFactory" class="com.mingchao.snsspider.http.webdriver.WebDriverFactoryImpl">
+		<property name="webDriverClass" value="${webdriver.class}" />
+		<property name="scriptTimeout" value="${webdriver.script.timeout}" />
+		<property name="implicitlyWait" value="${webdriver.implicitly.wait}" />
+		<property name="pageLoadTimeout" value="${webdriver.pageload.timeout}" />
+	</bean>
+              
+	<bean id="webDriverPool" class="com.mingchao.snsspider.http.webdriver.WebDriverPool"  lazy-init="true">
+		<constructor-arg index="0" ref="webDriverFactory" />
+		<constructor-arg index="1" value="${webdriver.pool.size}" />
+	</bean>
+
+	<bean id="resource" class="com.mingchao.snsspider.qq.resource.Resource"  lazy-init="true">
+		<property name="taskExecutor" ref="taskExecutor" />
+		<property name="webDriverPool" ref="webDriverPool" />
+		<property name="storage" ref="storageSlave" />
+		<property name="storageMongo" ref="storageMongo" />
+		<property name="scheduleFollow" ref="scheduleFollow" />
+		<property name="scheduleUser" ref="scheduleUser" />
+	</bean>
+</beans>
