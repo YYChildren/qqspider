@@ -14,9 +14,14 @@ import javax.persistence.OrderColumn;
 import org.hibernate.annotations.Type;
 
 @Entity(name="t_user_comment")
-public class UserComment {
-	@EmbeddedId
-	private UserCommentId id;
+public class UserComment  implements java.io.Serializable{
+	@Id
+	private Long oqq;   // 被评论qq
+	@Id
+	private String dataid;//从说说中
+	@Id
+	private Integer order;
+	
 	private Long qq;   // 评论qq
 	private String comment;
 	private String time;
@@ -24,12 +29,28 @@ public class UserComment {
 	@OrderColumn
 	private List<SecondaryUserComment> secondarycomments;
 	
-	public UserCommentId getId() {
-		return id;
+	public Long getOqq() {
+		return oqq;
 	}
 
-	public void setId(UserCommentId id) {
-		this.id = id;
+	public void setOqq(Long oqq) {
+		this.oqq = oqq;
+	}
+
+	public String getDataid() {
+		return dataid;
+	}
+
+	public void setDataid(String dataid) {
+		this.dataid = dataid;
+	}
+
+	public Integer getOrder() {
+		return order;
+	}
+
+	public void setOrder(Integer order) {
+		this.order = order;
 	}
 
 	public Long getQq() {

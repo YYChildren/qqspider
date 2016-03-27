@@ -9,14 +9,18 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 @Entity(name="t_user_mood")
-public class UserMood {
-	@EmbeddedId
-	private UserMoodId id;
+public class UserMood  implements java.io.Serializable{
+	@Id
+	private Long qq;   // 评论qq
+	@Id
+	private String dataid;//从说说中
+	
 	private String mood;
 	private String createtime;
 	private Long currenttime;
@@ -28,23 +32,29 @@ public class UserMood {
 	
 	// comment
 	private Integer commentcount;
-	@OneToMany(cascade = {CascadeType.ALL})
+	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
 	@OrderColumn
 	private List<UserComment> comments;
 	
 	// forward
 	private Integer forwardcount;
 	private Boolean isforward;//是不是转发，如果是转发，所有点赞归原说说
-	@ManyToOne(cascade = {CascadeType.ALL})
+	@ManyToOne(cascade = {CascadeType.ALL},fetch = FetchType.EAGER)
 	private UserMood forwardmood;//转发的内容
 	
+	public Long getQq() {
+		return qq;
+	}
+	public void setQq(Long qq) {
+		this.qq = qq;
+	}
+	public String getDataid() {
+		return dataid;
+	}
+	public void setDataid(String dataid) {
+		this.dataid = dataid;
+	}
 	
-	public UserMoodId getId() {
-		return id;
-	}
-	public void setId(UserMoodId id) {
-		this.id = id;
-	}
 	public String getMood() {
 		return mood;
 	}
