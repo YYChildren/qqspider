@@ -1,7 +1,10 @@
 package com.mingchao.snsspider.qq.provider;
 
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.mingchao.snsspider.qq.model.SecondaryUserComment;
 import com.mingchao.snsspider.qq.model.UserComment;
@@ -11,10 +14,12 @@ import com.mingchao.snsspider.qq.model.UserMoodId;
 import com.mingchao.snsspider.storage.db.StorageDB;
 
 public class TestMongo2 {
+	static ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+	
 	public static void main(String[] args) {
 		Long qq = 1L;
 		String dataid= "asdgviubisrg";
-		StorageDB storage = ResourceProvider.INSTANCE.getMongoStorage();
+		StorageDB storage = (StorageDB) applicationContext.getBean("storageMongo");
 		UserMood userMood = new UserMood();
 		UserMoodId id = new UserMoodId();
 		{
@@ -24,7 +29,6 @@ public class TestMongo2 {
 		userMood.setId(id);
 		userMood.setMood("早上好！");
 		userMood.setIsforward(true);
-		userMood.setForwardmood(new UserMood());
 		userMood.setCreatetime("2014年3月16日");
 		userMood.setCurrenttime(31432164321L);
 		userMood.setLikecount(2);
@@ -63,7 +67,6 @@ public class TestMongo2 {
 			ucid21.setDataid(dataid);
 			ucid21.setOrder(1);
 			comment21.setId(ucid21);
-			storage.insertDuplicate(comment21);
 			
 			UserComment comment22 = new UserComment();
 			{
@@ -86,8 +89,7 @@ public class TestMongo2 {
 			ucid22.setQq(qq);
 			ucid22.setDataid(dataid);
 			ucid22.setOrder(2);
-			comment21.setId(ucid22);
-			storage.insertDuplicate(comment22);
+			comment22.setId(ucid22);
 			
 		}
 		

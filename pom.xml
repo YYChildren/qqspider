@@ -141,8 +141,8 @@
 						<!-- <manifestFile> src/main/resources/META-INF/MANIFEST.MF </manifestFile> -->
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<!-- <classpathPrefix>lib/</classpathPrefix> -->
-							<mainClass>com.mingchao.snsspider.qq.main.Main</mainClass>
+							<classpathPrefix>lib/</classpathPrefix>
+							<!-- <mainClass>com.mypackage.MyClass</mainClass> -->
 						</manifest>
 					</archive>
 				</configuration>

@@ -7,6 +7,8 @@ import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
@@ -26,14 +28,14 @@ public class UserMood {
 	
 	// comment
 	private Integer commentcount;
-	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+	@OneToMany(cascade = {CascadeType.ALL})
 	@OrderColumn
 	private List<UserComment> comments;
 	
 	// forward
 	private Integer forwardcount;
 	private Boolean isforward;//是不是转发，如果是转发，所有点赞归原说说
-	@ManyToOne(cascade = {CascadeType.ALL},fetch = FetchType.EAGER)
+	@ManyToOne(cascade = {CascadeType.ALL})
 	private UserMood forwardmood;//转发的内容
 	
 	
