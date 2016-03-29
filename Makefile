@@ -1,4 +1,4 @@
-RESOURCE:=src/main/resources
+CONFIG:=config
 COMPILE_PATH:=target
 CLASSES_PATH:=target/classes
 TARGET_PATH:=~/data/snsspider/qqspider
@@ -25,7 +25,7 @@ beforedeploy:
 deploy:beforedeploy setting cp
 
 setting:
-	@cp $(RESOURCE)/*.* $(TARGET_PATH)/config/
+	@cp $(CONFIG)/*.template $(TARGET_PATH)/config/
 
 cp:
 	chmod +x spiderctl

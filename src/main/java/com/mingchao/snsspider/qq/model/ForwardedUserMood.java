@@ -8,20 +8,19 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 import org.hibernate.annotations.Type;
 
-@Entity(name="t_user_mood")
-public class UserMood{
+@Entity(name="t_forwarded_mood")
+public class ForwardedUserMood{
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Type(type = "objectid")
 	private String id; 
 	private Long qq;      
-	private String qqstr; //可能是朋友网，或者是经过加密的qq，与上面的qq二选一
+	private String qqstr;//可能是朋友网，或者是经过加密的qq，与上面的qq二选一
 	private String dataid;//从说说中
 	private String mood;
 	private String createtime;
@@ -40,11 +39,7 @@ public class UserMood{
 	
 	// forward
 	private Integer forwardcount;
-	private Boolean isforward;//是不是转发，如果是转发，所有点赞归原说说
-	@ManyToOne(cascade = {CascadeType.ALL})
-	private ForwardedUserMood forwardmood;//转发的内容
 	
-
 	public String getId() {
 		return id;
 	}
@@ -118,17 +113,5 @@ public class UserMood{
 	}
 	public void setForwardcount(Integer forwardcount) {
 		this.forwardcount = forwardcount;
-	}
-	public Boolean getIsforward() {
-		return isforward;
-	}
-	public void setIsforward(Boolean isforward) {
-		this.isforward = isforward;
-	}
-	public ForwardedUserMood getForwardmood() {
-		return forwardmood;
-	}
-	public void setForwardmood(ForwardedUserMood forwardmood) {
-		this.forwardmood = forwardmood;
 	}
 }

@@ -2,55 +2,41 @@ package com.mingchao.snsspider.qq.model;
 
 import java.util.List;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.EmbeddedId;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 import org.hibernate.annotations.Type;
 
 @Entity(name="t_user_comment")
-public class UserComment  implements java.io.Serializable{
-	@Id
-	private Long oqq;   // 被评论qq
-	@Id
-	private String dataid;//从说说中
-	@Id
-	private Integer order;
+public class UserComment{
 	
-	private Long qq;   // 评论qq
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Type(type = "objectid")
+	private String id; 
+	private Long qq;   //评论qq
+	private String qqstr;//可能是朋友网，或者是经过加密的qq，与上面的qq二选一
 	private String comment;
 	private String time;
-	@ElementCollection
+	@OneToMany(cascade = {CascadeType.ALL})
 	@OrderColumn
 	private List<SecondaryUserComment> secondarycomments;
 	
-	public Long getOqq() {
-		return oqq;
+	@ManyToOne
+	private UserMood usermood;
+	
+	public String getId() {
+		return id;
 	}
 
-	public void setOqq(Long oqq) {
-		this.oqq = oqq;
-	}
-
-	public String getDataid() {
-		return dataid;
-	}
-
-	public void setDataid(String dataid) {
-		this.dataid = dataid;
-	}
-
-	public Integer getOrder() {
-		return order;
-	}
-
-	public void setOrder(Integer order) {
-		this.order = order;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public Long getQq() {
@@ -59,6 +45,14 @@ public class UserComment  implements java.io.Serializable{
 
 	public void setQq(Long qq) {
 		this.qq = qq;
+	}
+	
+	public String getQqstr() {
+		return qqstr;
+	}
+
+	public void setQqstr(String qqstr) {
+		this.qqstr = qqstr;
 	}
 
 	public String getComment() {
@@ -84,4 +78,13 @@ public class UserComment  implements java.io.Serializable{
 	public void setSecondarycomments(List<SecondaryUserComment> secondarycomments) {
 		this.secondarycomments = secondarycomments;
 	}
+	
+	public UserMood getUsermood() {
+		return usermood;
+	}
+
+	public void setUsermood(UserMood usermood) {
+		this.usermood = usermood;
+	}
+
 }

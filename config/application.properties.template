@@ -1,5 +1,5 @@
 # pid file
-pidfile=/data/home/yangchaojun/data/snsspider/qqspider/qqspider.pid
+pidfile=youtpath
 
 # thread number
 executor.pool.size=8
@@ -7,12 +7,11 @@ executor.pool.size=8
 # webdirver num
 webdriver.pool.size=4
 # webdriver, you can select what you want. Usaually we set PhantomJSDriver in linux and ChromeDriver in Windows.   
-# webdriver.class=org.openqa.selenium.phantomjs.PhantomJSDriver
-webdriver.class=org.openqa.selenium.chrome.ChromeDriver
+webdriver.class=org.openqa.selenium.phantomjs.PhantomJSDriver
+# webdriver.class=org.openqa.selenium.chrome.ChromeDriver
 webdriver.script.timeout=4
 webdriver.implicitly.wait=4
 webdriver.pageload.timeout=8
-
 
 # expected qq count
 bloom.expected=50000000
@@ -20,6 +19,8 @@ bloom.expected=50000000
 bloom.fpp=0.0001
 # bloom filter will store in bloom.path/
 bloom.path=yourpath
+# time period to dump bloomfilter, millisecond
+bloom.dump.period=100000
 
 # please replace "qq" with your qq
 acount.user=qq

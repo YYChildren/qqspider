@@ -2,19 +2,25 @@ package com.mingchao.snsspider.qq.main;
 
 import com.mingchao.snsspider.executor.CloseableThread;
 
+import java.util.Timer;
+
 import org.apache.commons.logging.LogFactory;
 
+import com.mingchao.snsspider.qq.common.Paraments;
 import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
 import com.mingchao.snsspider.qq.task.schedule.SchaduleDispatchFollowTask;
 import com.mingchao.snsspider.qq.task.schedule.SchaduleVisitFollowTask;
+import com.mingchao.snsspider.qq.task.timer.DumpBloomTask;
 import com.mingchao.snsspider.task.CloseRunnableTask;
 import com.mingchao.snsspider.util.Crawlable;
 
 public class Spider implements Crawlable {
+	private Timer timer;  
 	private CloseableThread dispatchFollowThread;
 	private CloseableThread visitFollowThread;
 	private Resource resource = ResourceProvider.INSTANCE.getResource();
+	private Paraments para = ResourceProvider.INSTANCE.getParaments();
 
 	private NotifyStopAble notifyStopAble;
 
@@ -36,7 +42,8 @@ public class Spider implements Crawlable {
 			
 			dispatchFollowThread.start();
 			visitFollowThread.start();
-			
+			timer = new Timer();
+			timer.schedule(new DumpBloomTask(), para.getDumpPeriod(), para.getDumpPeriod());//每10分钟dump 一次bloom filter
 		} catch (Exception e) {
 			LogFactory.getLog(this.getClass().getName()).error(e, e);
 		}
@@ -44,6 +51,9 @@ public class Spider implements Crawlable {
 
 	@Override
 	public void close() {
+		if(timer!=null){
+			timer.cancel();
+		}
 		// 关闭调度线程
 		dispatchFollowThread.close();
 		visitFollowThread.close();

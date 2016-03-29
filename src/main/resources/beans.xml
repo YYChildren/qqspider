@@ -14,6 +14,7 @@
 		<property name="pidFile" value="${pidfile}"/>
 		<property name="accountUser" value="${acount.user}"/>
 		<property name="accountPassword" value="${acount.password}"/>
+		<property name="dumpPeriod" value="${bloom.dump.period}"/>
 	</bean>
 
 	<bean id="storageMongo" class="com.mingchao.snsspider.storage.db.StorageDB"  lazy-init="true">

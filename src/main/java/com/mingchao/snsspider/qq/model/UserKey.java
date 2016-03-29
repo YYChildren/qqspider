@@ -15,7 +15,7 @@ public class UserKey extends HadoopString implements  IdAble{
 	private Boolean visitable;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long getId() {
 		return id;
 	}

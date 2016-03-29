@@ -6,7 +6,7 @@ import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.executor.TaskExcutor;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.task.BaseCloseableTask;
-import com.mingchao.snsspider.qq.task.work.VisitFollowTask;
+import com.mingchao.snsspider.qq.task.work.VisitMoodTask;
 import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.util.TimeUtils;
 
@@ -24,7 +24,7 @@ public class SchaduleVisitFollowTask extends BaseCloseableTask {
 			try {
 				ScheduleFollowKey srk = scheduleFollow.fetch();
 				if (srk != null) {
-					executor.execute(new VisitFollowTask(srk));
+					executor.execute(new VisitMoodTask(srk));
 				}else{
 					TimeUtils.sleep();
 				}

@@ -29,6 +29,7 @@
 		<!-- Drop and re-create the database schema on startup -->
 		<!-- <property name="hbm2ddl.auto">update</property> -->
 
+		<!-- 以下请勿修改 -->
 		<mapping class="com.mingchao.snsspider.qq.model.UserKey" />
 		<mapping class="com.mingchao.snsspider.qq.model.UserRelation" />
 		<mapping class="com.mingchao.snsspider.qq.model.ScheduleUserKey" />

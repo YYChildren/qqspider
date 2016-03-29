@@ -10,7 +10,7 @@
 
 ### 部署注意
 * 可修改Makefile中TARGET_PATH （部署目标路径）
-* 需要将src/main/resouces下的 *.template 文件去除 .template扩展名，并配置成你所需
+* 需要将config下的 *.template 文件去除 .template扩展名，并配置成你所需
 * 需要建表，建表语句在sql目录下
 
 ### 部署

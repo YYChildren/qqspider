@@ -5,6 +5,7 @@ public class BaseParaments implements Paraments {
 	private String pidFile=null;
 	private String accountUser=null;
 	private String accountPassword=null;
+	private Long dumpPeriod = null;
 	
 
 	public String getPidFile() {
@@ -32,5 +33,13 @@ public class BaseParaments implements Paraments {
 
 	public void setPidFile(String pidFile) {
 		this.pidFile = pidFile;
+	}
+
+	public Long getDumpPeriod() {
+		return dumpPeriod;
+	}
+
+	public void setDumpPeriod(Long dumpPeriod) {
+		this.dumpPeriod = dumpPeriod;
 	}
 }

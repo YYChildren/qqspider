@@ -7,4 +7,6 @@ public interface Paraments {
 	public String getAccountUser();
 
 	public String getAccountPassword();
+	
+	public Long getDumpPeriod();
 }

@@ -5,6 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.hibernate.annotations.Type;
+
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.mingchao.snsspider.model.IdAble;

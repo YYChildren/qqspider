@@ -20,14 +20,13 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.http.webdriver.WebDriverWrapper;
+import com.mingchao.snsspider.qq.model.ForwardedUserMood;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.qq.model.SecondaryUserComment;
 import com.mingchao.snsspider.qq.model.UserComment;
-import com.mingchao.snsspider.qq.model.UserCommentId;
 import com.mingchao.snsspider.qq.model.UserKey;
 import com.mingchao.snsspider.qq.model.UserMood;
-import com.mingchao.snsspider.qq.model.UserMoodId;
 import com.mingchao.snsspider.qq.model.UserRelation;
 import com.mingchao.snsspider.qq.task.VisitTask;
 import com.mingchao.snsspider.qq.util.WebDriverUtil;
@@ -35,8 +34,8 @@ import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.storage.Storage;
 import com.mingchao.snsspider.util.TimeUtils;
 
-public class VisitMoodTask extends VisitTask<String>{
-	private Schedule<ScheduleFollowKey> scheduleFollow = resource.getScheduleFollow(); 
+public class VisitMoodTask extends VisitTask<String> {
+	private Schedule<ScheduleFollowKey> scheduleFollow = resource.getScheduleFollow();
 	private Schedule<ScheduleUserKey> scheduleUser = resource.getScheduleUser();
 	private Storage storage = resource.getStorage();
 	private Storage storageMogo = resource.getStorageMongo();
@@ -53,28 +52,36 @@ public class VisitMoodTask extends VisitTask<String>{
 		pageNum = scheduleFollowKey.getPageNum();
 		modUrl = resource.getModUrl(qq);
 	}
-	
+
+	public List<UserMood> getMoods() {
+		return moods;
+	}
+
+	public Set<Long> getNewQqs() {
+		return newQqs;
+	}
+
 	@Override
 	protected boolean visit(WebDriverWrapper webDriverWrapper) {
-		
+
 		if (tryVisit(modUrl, webDriverWrapper)) {
 			return true;
-		}else{
+		} else {
 			reschaduleRela();
 			return false;
 		}
 	}
-	
+
 	// 未登录状态的处理
 	@Override
 	protected String handleNoLogin(boolean hadTryLogin, WebDriverWrapper webDriverWrapper) {
 		log.info(WebDriverUtil.STATUS.NOLOGIN);
 		// 如果已经尝试登录过一次
-		if(hadTryLogin){
+		if (hadTryLogin) {
 			reschaduleRela();
 			return null;
-		}else{
-			try{
+		} else {
+			try {
 				login(webDriverWrapper);
 			} catch (TimeoutException e) {
 				log.warn(e, e);
@@ -85,7 +92,7 @@ public class VisitMoodTask extends VisitTask<String>{
 		}
 	}
 
-	//无访问权限的处理
+	// 无访问权限的处理
 	@Override
 	protected String handleNoProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为无权访问
@@ -95,8 +102,8 @@ public class VisitMoodTask extends VisitTask<String>{
 		storage.insertDuplicate(uk);
 		return null;
 	}
-	
-	//有访问权限的处理
+
+	// 有访问权限的处理
 	@Override
 	protected String handleProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为有权访问
@@ -104,25 +111,28 @@ public class VisitMoodTask extends VisitTask<String>{
 		uk.setQq(qq);
 		uk.setVisitable(true);
 		storage.insertDuplicate(uk);
-		
-		
+
 		String pageSource = null;
-		RemoteWebDriver webDriver =  webDriverWrapper.getWebDriver();
+		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
 		webDriver.switchTo().frame(webDriver.findElement(By.xpath("//iframe[@class='app_canvas_frame']")));
 		boolean isOk = false;
 		int tryTime = 2;
-		do{
-			try{
+		do {
+			try {
 				tryTime--;
-				//如果当前页不是1，current标签不是当前页
-				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span")).getText()) != pageNum){
+				// 如果当前页不是1，current标签不是当前页
+				if (pageNum != 1 && Integer
+						.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span"))
+								.getText()) != pageNum) {
 					WebElement target = webDriver.findElement(By.xpath("//input[starts-with(@id,'pager_go')]"));
-					webDriver.executeScript("arguments[0].value='"+String.valueOf(pageNum)+"';", target);
-					webDriver.executeScript("arguments[0].click();", 
+					webDriver.executeScript("arguments[0].value='" + String.valueOf(pageNum) + "';", target);
+					webDriver.executeScript("arguments[0].click();",
 							webDriver.findElement(By.xpath("//button[starts-with(@id,'pager_gobtn')]")));
 				}
-				
-				if(pageNum != 1 && Integer.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span")).getText()) != pageNum){
+
+				if (pageNum != 1 && Integer
+						.parseInt(webDriver.findElement(By.xpath("//div[@id='pager']//span[@class='current']/span"))
+								.getText()) != pageNum) {
 					try {
 						TimeUtils.sleep(100);
 					} catch (InterruptedException e) {
@@ -130,35 +140,35 @@ public class VisitMoodTask extends VisitTask<String>{
 					}
 					continue;
 				}
-				
+
 				// 相当于等待页面加载完成
 				webDriver.findElements(By.xpath("//li[@class='feed']"));
-				//webDriver.findElements(By.xpath("//div[@class='comments_content']/a[@class='nickname']"));
+				// webDriver.findElements(By.xpath("//div[@class='comments_content']/a[@class='nickname']"));
 				pageSource = webDriver.getPageSource();
-				
+
 				// 判断是否有下一页，如果有，则调度
 				boolean hasNext = true;
 				WebElement pager = webDriver.findElement(By.xpath("//div[@id='pager']"));
-				if(pager.getAttribute("style").equals("display: none;")){//没有显示，肯定是没有下一页
+				if (pager.getAttribute("style").equals("display: none;")) {// 没有显示，肯定是没有下一页
 					hasNext = false;
-				}else{
-					for (WebElement element : webDriver.findElements(
-							By.xpath("//div[@id='pager']//p[@class='mod_pagenav_main']"))) {
-						//下一页被禁用，说明没有下一页
-						if(element.getAttribute("class") == "mod_pagenav_disable" 
-								&& element.findElement(By.xpath("/span")).getText().contains("下一页")){
+				} else {
+					for (WebElement element : webDriver
+							.findElements(By.xpath("//div[@id='pager']//p[@class='mod_pagenav_main']"))) {
+						// 下一页被禁用，说明没有下一页
+						if (element.getAttribute("class") == "mod_pagenav_disable"
+								&& element.findElement(By.xpath("/span")).getText().contains("下一页")) {
 							hasNext = false;
 							break;
 						}
 					}
 				}
-				if(hasNext){
+				if (hasNext) {
 					schaduleNextRela();
 				}
-				
+
 				isOk = true;
-			}catch (TimeoutException | StaleElementReferenceException e){
-				if(tryTime==0){
+			} catch (TimeoutException | StaleElementReferenceException e) {
+				if (tryTime == 0) {
 					reschaduleRela();
 				}
 				try {
@@ -167,33 +177,33 @@ public class VisitMoodTask extends VisitTask<String>{
 					throw new NPInterruptedException(e1);
 				}
 				continue;
-			}catch(NoSuchElementException e){
+			} catch (NoSuchElementException e) {
 				break;
 			}
-		}while(!isOk && tryTime > 0);
+		} while (!isOk && tryTime > 0);
 		webDriver.switchTo().defaultContent();
 		return pageSource;
 	}
 
 	@Override
-	protected String handleException(WebDriverException  e,WebDriverWrapper webDriverWrapper) {
+	protected String handleException(WebDriverException e, WebDriverWrapper webDriverWrapper) {
 		reschaduleRela();
 		throw e;
 	}
-	
+
 	@Override
-	protected String handleException(NPInterruptedException  e,WebDriverWrapper webDriverWrapper) {
+	protected String handleException(NPInterruptedException e, WebDriverWrapper webDriverWrapper) {
 		reschaduleRela();
 		throw e;
 	}
 
 	@Override
 	protected void handleResult(String pageSource) {
-		moods = null;
-		newQqs = null;
-		analyze(pageSource);
-		if(newQqs!=null && !newQqs.isEmpty()){
-			newQqs.remove(qq);//删除自身
+		if (pageSource == null || pageSource.isEmpty()) {
+			return;
+		}
+		parse(pageSource);
+		if (newQqs != null && !newQqs.isEmpty()) {
 			List<ScheduleUserKey> suks = new ArrayList<ScheduleUserKey>();
 			List<UserRelation> urs = new ArrayList<UserRelation>();
 			for (Iterator<Long> iterator = newQqs.iterator(); iterator.hasNext();) {
@@ -206,259 +216,343 @@ public class VisitMoodTask extends VisitTask<String>{
 				ur.setOqq(newQq);
 				urs.add(ur);
 			}
-			schadule(suks);                                    //调度新QQ
-			storage.insertIgnore(urs);                     //持久化关系链
+			schadule(suks); // 调度新QQ
+			storage.insertIgnore(urs); // 持久化关系链
 		}
-		if(moods !=null && !moods.isEmpty()){
-			storageMogo.insertDuplicate(moods);  //持久化说说
+		if (moods != null && !moods.isEmpty()) {
+			storageMogo.insertDuplicate(moods); // 持久化说说
 		}
 		log.info("get follow, qq: " + qq + ", page: " + pageNum);
 	}
-	
-	public void analyze(String pageSource) {
-		if (pageSource == null || pageSource.isEmpty()) {
-			return;
-		}
+
+	public void parse(String pageSource) {
+		Document doc = Jsoup.parse(pageSource);
 		moods = new ArrayList<UserMood>();
 		newQqs = new HashSet<Long>();
-		Long currenttime = System.currentTimeMillis();
-		Document doc = Jsoup.parse(pageSource);
-		Element msgList = doc.getElementById("msgList");//ol 标签
-		for (Element element : msgList.children()) {//li标签
-			UserMood userMood = new UserMood();
-			
-			UserMoodId id = new UserMoodId();
-			{
-				id.setQq(qq);
-				id.setDataid(element.attr("data-tid"));
-			}
-			
-			String mood = null;
-			String createtime=null;
-			//Long currenttime;
+		getUserMoods(doc);
+		moods = moods.isEmpty() ? null : moods;
+		newQqs.remove(qq);// 删除自身
+		newQqs = newQqs.isEmpty() ? null : newQqs;
+		System.out.println();
+	}
 
-			//like
-			Integer likecount = null;
-			List<Long> likeqqs = null;
-			
-			// comment
-			Integer commentcount = null;
-			List<UserComment> comments = null;
-			
-			// forward
-			Integer forwardcount = null;
-			Boolean isforward = null;//是不是转发，如果是转发，所有点赞归原说说
-			UserMood forwardmood = null;//转发的内容
-			
-			for(Element feedchild : element.getElementsByClass("box bgr3").get(0).children()){
-				switch(feedchild.attr("class")){
-				case "bd":
-					mood = feedchild.getElementsByTag("pre").get(0).text();
-					break;
-				case "md":                    //TODO 可能有图片
-					break;
-				case "md rt_content":    //转发
-					isforward=true;
-					forwardmood = getForwardMood(feedchild);
-					break;
-				case "ft":                      //时间  --  数量（赞 -- 评论  -- 转发）
-					Element infoElement = feedchild.getElementsByClass("info").get(0)
-						.getElementsByTag("a").get(0);
-					createtime = infoElement.text();
-				
-					Element opElement = feedchild.getElementsByClass("op").get(0);
-					String likeText = opElement.select("a[_origtemp=赞{cnt}]").get(0).text().replace("赞", "");
-					likecount = likeText.equals("") ? null : Integer.parseInt(likeText.replaceAll("[^\\d]*", ""));
-					String commentText = opElement.getElementsByClass("c_tx rt_comment_btn").get(0).text().replace("评论", "");
-					commentcount = commentText.equals("") ? null : Integer.parseInt(commentText.replaceAll("[^\\d]*", ""));
-					String forwardText = opElement.getElementsByClass("c_tx rt_forward_btn").get(0).text().replace("转发", "");
-					forwardcount = forwardText.equals("") ? null : Integer.parseInt(forwardText.replaceAll("[^\\d]*", ""));
-				
-					break;
-				case "box_extra bor3": //点赞、评论具体情况
-					Elements feedLikeEles = feedchild.getElementsByClass("feed_like");
-					if(!feedLikeEles.isEmpty()){
-						likeqqs = new ArrayList<Long>();
-						for (Element element2 : feedLikeEles.select("a[href]")) {
-							String href = element2.attr("href");
-							if(href.contains("qzone.qq.com")){
-								Long likeqq = Long.parseLong(href.replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
-								likeqqs.add(likeqq);
-							}
-						}
-						if(likeqqs.isEmpty()){
-							likeqqs = null;
-						}else{
-							newQqs.addAll(likeqqs);//点赞为新增QQ号
-						}
-					}
-					comments = getUserComments(id,feedchild);
-					break;
-				}
-			}
-			
-			userMood.setId(id);
-			userMood.setMood(mood);
-			userMood.setCreatetime(createtime);
-			userMood.setCurrenttime(currenttime);
-			userMood.setLikecount(likecount);
-			userMood.setLikeqqs(likeqqs);
-			userMood.setCommentcount(commentcount);
-			userMood.setComments(comments);
-			userMood.setForwardcount(forwardcount);
-			userMood.setIsforward(isforward);
-			userMood.setForwardmood(forwardmood);
+	private void getUserMoods(Document doc) {
+		Long currenttime = System.currentTimeMillis();
+		Element msgList = doc.getElementById("msgList");// ol 标签
+		for (Element element : msgList.children()) {// li标签
+			UserMood userMood = getUserMood(currenttime, element);
 			moods.add(userMood);
 		}
 	}
-	
-	private UserMood getForwardMood(Element element){
-		UserMood forwardUserMood = new UserMood();
-		UserMoodId forwardId = null; 
-		String dataid = null;
+
+	private UserMood getUserMood(Long currenttime, Element element) {
+		UserMood userMood = new UserMood();
+		// Long qq;
+		// Long qqstr;
+		String dataid = element.attr("data-tid");
+		String mood = null;
 		String createtime = null;
+		// Long currenttime;
+
+		// like
+		Integer likecount = null;
+		List<Long> likeqqs = null;
+
+		// comment
 		Integer commentcount = null;
+		List<UserComment> comments = null;
+
+		// forward
 		Integer forwardcount = null;
-		
-		
+		Boolean isforward = null;// 是不是转发，如果是转发，所有点赞归原说说
+		ForwardedUserMood forwardmood = null;// 转发的内容
+		Elements eles = element.select("div[class=box bgr3]");
+		if (!eles.isEmpty()) {
+			for (Element feedchild : eles.get(0).children()) {
+				switch (feedchild.attr("class")) {
+				case "bd":
+					Elements moodElements = feedchild.getElementsByTag("pre");
+					mood = moodElements.isEmpty() ? null : moodElements.get(0).text();
+					break;
+				case "md": // TODO 可能有图片
+					break;
+				case "md rt_content": // 转发
+					isforward = true;
+					forwardmood = getForwardMood(feedchild);
+					break;
+				case "ft": // 时间 -- 数量（赞 -- 评论 -- 转发）
+					Elements infoElements = feedchild.getElementsByClass("info");
+					Elements timeElements = infoElements.isEmpty() ? null : infoElements.select("a[href]");
+					createtime = (timeElements == null || timeElements.isEmpty()) ? null : timeElements.text();
+					createtime = ("".equals(createtime) || createtime == null) ? null : createtime;
+
+					Elements opElements = feedchild.getElementsByClass("op");
+					// log.info(opElements);
+					Elements likeElements = opElements.select("a[_origtemp=赞{cnt}]");
+					String likeText = likeElements.isEmpty() ? null
+							: likeElements.get(0).text().replaceAll("[^\\d]*", "");
+					likecount = ("".equals(likeText) || likeText == null) ? null : Integer.parseInt(likeText);
+
+					Elements commentElements = opElements.select("a[class=c_tx comment_btn]");
+					String commentText = commentElements.isEmpty() ? null
+							: commentElements.text().replaceAll("[^\\d]*", "");
+					commentcount = ("".equals(commentText) || commentText == null) ? null
+							: Integer.parseInt(commentText);
+
+					Elements forwardElements = opElements.select("a[class=c_tx forward_btn]");
+					String forwardText = forwardElements.isEmpty() ? null
+							: forwardElements.text().replaceAll("[^\\d]*", "");
+					forwardcount = ("".equals(forwardText) || forwardText == null) ? null
+							: Integer.parseInt(forwardText);
+					break;
+				case "box_extra bor3 ": // 点赞、评论具体情况
+					Elements feedLikeEles = feedchild.getElementsByClass("feed_like");
+					if (!feedLikeEles.isEmpty()) {
+						likeqqs = new ArrayList<Long>();
+						for (Element element2 : feedLikeEles.select("a[href]")) {
+							String href = element2.attr("href");
+							try {
+								Long likeqq = Long.parseLong(getAccountStr(href));
+								likeqqs.add(likeqq);
+								newQqs.add(likeqq); // ADD new qq
+							} catch (NumberFormatException e) {
+							}
+						}
+						likeqqs = likeqqs.isEmpty() ? null : likeqqs;
+					}
+					comments = getUserComments(userMood, feedchild);
+					break;
+				}
+			}
+		}
+
+		userMood.setQq(qq);
+		userMood.setDataid(dataid);
+		userMood.setMood(mood);
+		userMood.setCreatetime(createtime);
+		userMood.setCurrenttime(currenttime);
+		if (isforward != null && isforward.equals(true)) {
+			forwardmood.setCurrenttime(currenttime);
+			forwardmood.setLikecount(likecount);
+		} else {
+			userMood.setLikecount(likecount);
+		}
+		userMood.setLikeqqs(likeqqs);
+		userMood.setCommentcount(commentcount);
+		userMood.setComments(comments);
+		userMood.setForwardcount(forwardcount);
+		userMood.setIsforward(isforward);
+		userMood.setForwardmood(forwardmood);
+		return userMood;
+	}
+
+	private ForwardedUserMood getForwardMood(Element element) {
+		ForwardedUserMood forwardUserMood = new ForwardedUserMood();
+		Long fqq = null;
+		String fqqstr = null;
+		String dataid = null;
+		String mood = null;
+		String createtime = null;
+		// Long currenttime;
+		// Integer likecount;
+		// List<Long> likeqqs;
+		Integer commentcount = null;
+		// List<UserComment> comments;
+		Integer forwardcount = null;
 		for (Element child : element.child(0).children()) {
-			switch(element.attr("class")){
+			switch (child.attr("class")) {
 			case "bd":
-				Long fqq = Long.parseLong(child.getElementsByTag("a").get(0).attr("data-uin"));
-				String mood = child.getElementsByClass("pre").get(0).text();
-				forwardId = new UserMoodId();
-				forwardId.setQq(fqq);
-				forwardUserMood.setMood(mood);
+				String accountStr = child.getElementsByTag("a").get(0).attr("data-uin");
+				try {
+					fqq = Long.parseLong(accountStr);
+				} catch (NumberFormatException e) {
+					fqqstr = accountStr;
+				}
+				mood = child.getElementsByTag("pre").text();
+				mood = mood.isEmpty() ? null : mood;
 				break;
-			case "md":  //TODO 可能有照片
+			case "md": // TODO 可能有照片
 				break;
 			case "ft":
-				Element infoElement = child.getElementsByClass("info").get(0)
-					.getElementsByTag("a").get(0);
-				String infoUrl = infoElement.attr("href");
-				dataid = infoUrl.replaceFirst(".*mood/", "").replaceAll("\\..*", "");
-				createtime = infoElement.text();
-				
-				Element opElement = child.getElementsByClass("op").get(0);
-				String commentText = opElement.getElementsByClass("c_tx rt_comment_btn").get(0).text().replace("评论", "");
-				commentcount = commentText.equals("") ? null : Integer.parseInt(commentText.replaceAll("[^\\d]*", ""));
-				String forwardText = opElement.getElementsByClass("c_tx rt_forward_btn").get(0).text().replace("转发", "");
-				forwardcount = forwardText.equals("") ? null : Integer.parseInt(forwardText.replaceAll("[^\\d]*", ""));
-				
-				
+				Elements infoElements = child.getElementsByClass("info");
+				Elements timeElements = infoElements.isEmpty() ? null : infoElements.select("a[href]");
+				if (timeElements != null && !timeElements.isEmpty()) {
+					Element timeElement = timeElements.get(0);
+					String infoUrl = timeElement.attr("href");
+					dataid = ("".equals(infoUrl) || infoUrl == null) ? null
+							: infoUrl.replaceFirst(".*mood/", "").replaceAll("\\..*", "");
+					createtime = timeElement.text();
+					createtime = ("".equals(createtime) || createtime == null) ? null : createtime;
+				}
+
+				Elements opElements = child.getElementsByClass("op");
+
+				Elements commentElements = opElements.select("a[class=c_tx rt_comment_btn]");
+				String commentText = commentElements.isEmpty() ? null
+						: commentElements.text().replaceAll("[^\\d]*", "");
+				commentcount = ("".equals(commentText) || commentText == null) ? null : Integer.parseInt(commentText);
+
+				Elements forwardElements = opElements.select("a[class=c_tx rt_forward_btn]");
+				String forwardText = forwardElements.isEmpty() ? null
+						: forwardElements.text().replaceAll("[^\\d]*", "");
+				forwardcount = ("".equals(forwardText) || forwardText == null) ? null : Integer.parseInt(forwardText);
 				break;
 			}
 		}
-		
-		forwardUserMood.setId(forwardId);
-		forwardId.setDataid(dataid);
+		forwardUserMood.setQq(fqq);
+		forwardUserMood.setQqstr(fqqstr);
+		forwardUserMood.setDataid(dataid);
+		forwardUserMood.setMood(mood);
 		forwardUserMood.setCreatetime(createtime);
 		forwardUserMood.setCommentcount(commentcount);
 		forwardUserMood.setForwardcount(forwardcount);
 		return forwardUserMood;
 	}
-	
-	private List<UserComment> getUserComments(UserMoodId id, Element element){
+
+	private List<UserComment> getUserComments(UserMood userMood, Element element) {
 		Elements commentEles = element.getElementsByClass("comments_list");
-		if(commentEles.isEmpty()){
+		if (commentEles.isEmpty()) {
 			return null;
 		}
 		Element commentUl = null;
 		for (Element element2 : commentEles.get(0).children()) {
-			if(element2.tagName().equals("ul")){
+			if (element2.tagName().equals("ul")) {
 				commentUl = element2;
 				break;
 			}
 		}
-		if(commentUl == null){
+		if (commentUl == null) {
 			return null;
 		}
 		List<UserComment> comments = new ArrayList<UserComment>();
-		int order = 0;
 		for (Element element2 : commentUl.children()) {
 			UserComment userComment = null;
-			List<SecondaryUserComment> subCommnets = new ArrayList<SecondaryUserComment>(); 
+			List<SecondaryUserComment> secondarycomments = new ArrayList<SecondaryUserComment>();
 			int i = 0;
 			for (Element element3 : element2.getElementsByClass("comments_content")) {
-				if(i == 0){
-					userComment = getUserComment(id, order++, element3);
-				}else{
-					SecondaryUserComment subCommnet = getSecondaryUserComment(element3);
-					if(subCommnet!=null){
-						subCommnets.add(subCommnet);
+				if (i++ == 0) {
+					userComment = getUserComment(userMood, element3);
+				} else {
+					SecondaryUserComment secondarycomment = getSecondaryUserComment(userComment, element3);
+					if (secondarycomment != null) {
+						secondarycomments.add(secondarycomment);
 					}
 				}
 			}
+			secondarycomments = secondarycomments.isEmpty() ? null : secondarycomments;
 			if (userComment != null) {
-				if (!subCommnets.isEmpty()) {
-					userComment.setSecondarycomments(subCommnets);
+				if (secondarycomments != null) {
+					userComment.setSecondarycomments(secondarycomments);
 				}
 				comments.add(userComment);
 			}
 		}
-		if(comments.isEmpty()){
-			comments = null;
-		}
+		comments = comments.isEmpty() ? null : comments;
 		return comments;
 	}
-	
-	private UserComment getUserComment(UserMoodId id,int order, Element element){
-		UserComment userComment = new UserComment();
-		UserCommentId ucid = new UserCommentId();
-		ucid.setQq(id.getQq());
-		ucid.setDataid(id.getDataid());
-		ucid.setOrder(order);
 
-		for (Element opElement : element.getElementsByClass("comments_op")) {
-			opElement.remove();
-		}//删除无用标签
-		String qqHref = element.getElementsByClass("nickname").get(0).attr("href");
-		Long qq = Long.parseLong(qqHref.replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
-		String comment = element.text();
+	private UserComment getUserComment(UserMood userMood, Element element) {
+		UserComment userComment = new UserComment();
+		Long qq = null; // 评论qq
+		String qqstr = null;// 可能是朋友网，或者是经过加密的qq，与上面的qq二选一
+		String comment = null;
 		String time = null;
-		for (Element timeElement : element.getElementsByClass("c_tx3 ui_mr10")) {
-			if(timeElement.attr("style").isEmpty()){
+		// List<SecondaryUserComment> secondarycomments = null;
+		// UserMood usermood = null;
+
+		for (Element timeElement : element.select("span[class=c_tx3 ui_mr10]")) {
+			if ("".equals(timeElement.attr("style"))) {
 				time = timeElement.text();
 				break;
 			}
+		} // 获取时间
+		for (Element opElement : element.getElementsByClass("comments_op")) {
+			opElement.remove();
+		} // 删除无用标签
+
+		Elements nickNameElements = element.select("a.nickname");
+		String qqHref = nickNameElements.isEmpty() ? null : nickNameElements.get(0).attr("href");
+		String accountStr = getAccountStr(qqHref);
+		try {
+			qq = Long.parseLong(accountStr);
+			newQqs.add(qq); // ADD new qq
+		} catch (NumberFormatException e) {
+			qqstr = accountStr;
 		}
-		userComment.setId(ucid);
+		comment = element.text();
+
 		userComment.setQq(qq);
+		userComment.setQqstr(qqstr);
 		userComment.setComment(comment);
 		userComment.setTime(time);
+		userComment.setUsermood(userMood);
 		return userComment;
 	}
-	
-	private SecondaryUserComment getSecondaryUserComment(Element element){
-		for (Element opElement : element.getElementsByClass("comments_op")) {
-			opElement.remove();
-		}
+
+	private SecondaryUserComment getSecondaryUserComment(UserComment userComment, Element element) {
 		SecondaryUserComment subUserComment = new SecondaryUserComment();
-		Elements elements = element.getElementsByClass("nickname");
-		Long qq = null;
-		Long oqq = null;
-		if(elements.size() == 2){
-			String qqHref = elements.get(0).attr("href");
-			String oqqHref = elements.get(0).attr("href");
-			qq = Long.parseLong(qqHref.replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
-			oqq = Long.parseLong(oqqHref.replaceFirst("[^\\d]*", "").replaceFirst("[^\\d].*", ""));
-		}
-		String comment = element.text();
-		String time = null;
-		for (Element timeElement : element.getElementsByClass("c_tx3 ui_mr10")) {
-			if(timeElement.attr("style").isEmpty()){
+		Long qq = null; // 评论qq
+		String qqstr = null;// 可能是朋友网，或者是经过加密的qq，与上面的qq二选一
+		Long oqq = null; // 被评论qq
+		String oqqstr = null;// 可能是朋友网，或者是经过加密的qq，与上面的oqq二选一
+		String comment = null; // 评论
+		String time = null; // 评论时间
+		// UserComment usercomment;
+
+		for (Element timeElement : element.select("span[class=c_tx3 ui_mr10]")) {
+			if ("".equals(timeElement.attr("style"))) {
 				time = timeElement.text();
 				break;
 			}
+		} // 获取时间
+		for (Element opElement : element.getElementsByClass("comments_op")) {
+			opElement.remove();
+		} // 删除无用标签
+
+		Elements nickNameElements = element.select("a.nickname");
+		if (nickNameElements.size() == 2) {
+			String qqHref = nickNameElements.get(0).attr("href");
+			String qqAccountStr = getAccountStr(qqHref);
+			try {
+				qq = Long.parseLong(qqAccountStr);
+				newQqs.add(qq); // ADD new qq
+			} catch (NumberFormatException e) {
+				qqstr = qqAccountStr;
+			}
+			String oqqHref = nickNameElements.get(1).attr("href");
+			String oqqAccountStr = getAccountStr(oqqHref);
+			try {
+				oqq = Long.parseLong(oqqAccountStr);
+				newQqs.add(oqq); // ADD new qq
+			} catch (NumberFormatException e) {
+				oqqstr = oqqAccountStr;
+			}
 		}
+		comment = element.text();
+
 		subUserComment.setQq(qq);
+		subUserComment.setQqstr(qqstr);
 		subUserComment.setOqq(oqq);
+		subUserComment.setOqqstr(oqqstr);
 		subUserComment.setComment(comment);
 		subUserComment.setTime(time);
+		subUserComment.setUsercomment(userComment);
 		return subUserComment;
 	}
-	
-	//TODO
+
+	public static String getAccountStr(String href) {
+		if (href == null || href.isEmpty()) {
+			return null;
+		}
+		if (href.contains("user.qzone.qq.com") || href.contains("pengyou.com")) {
+			return href.replaceFirst("^.*com/", "").replaceFirst("^.*u=", "").replaceFirst("/.*$", "");
+		} else {
+			return null;
+		}
+
+	}
+
+	// TODO
 	private void schadule(List<ScheduleUserKey> suks) {
 		scheduleUser.schadule(suks);
 	}
@@ -468,7 +562,7 @@ public class VisitMoodTask extends VisitTask<String>{
 		scheduleFollowKey.setId(null);
 		reschaduleRela(scheduleFollowKey);
 	}
-	
+
 	// 调度下一页的任务
 	private void schaduleNextRela() {
 		ScheduleFollowKey newScheduleFollowKey = new ScheduleFollowKey();
@@ -476,10 +570,9 @@ public class VisitMoodTask extends VisitTask<String>{
 		newScheduleFollowKey.setPageNum(pageNum + 1);
 		reschaduleRela(newScheduleFollowKey);
 	}
-	
+
 	private void reschaduleRela(ScheduleFollowKey scheduleFollowKey) {
 		scheduleFollow.reschadule(scheduleFollowKey);
 	}
-
 
 }
