@@ -3,6 +3,7 @@ package com.mingchao.snsspider.qq.util;
 import java.util.Iterator;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 
@@ -21,7 +22,15 @@ public class WebDriverUtil {
 	// TODO 需要添加404状态 <title>404</title>
 	// 
 	public static STATUS verifyStatus(WebDriver webDriver) {
-		String bodyClass = webDriver.findElement(By.xpath("//body")).getAttribute("class");
+		String bodyClass = "";
+		do{
+			try {
+				bodyClass = webDriver.findElement(By.tagName("body")).getAttribute("class");
+				break;
+			} catch (StaleElementReferenceException e) {
+				continue;
+			}
+		}while(true);
 		if (bodyClass.startsWith("no_privilege")){
 			return STATUS.NOPRIVILEGE;
 		}

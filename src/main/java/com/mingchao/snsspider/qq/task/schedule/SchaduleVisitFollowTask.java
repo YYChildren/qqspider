@@ -1,7 +1,5 @@
 package com.mingchao.snsspider.qq.task.schedule;
 
-import java.io.IOException;
-
 import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.executor.TaskExcutor;
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
@@ -18,7 +16,7 @@ public class SchaduleVisitFollowTask extends BaseCloseableTask {
 	private TaskExcutor executor = resource.getTaskExecutor();
 
 	@Override
-	public void execute() throws IOException {
+	public void execute(){
 		// 需要登录
 		while (run) {
 			try {

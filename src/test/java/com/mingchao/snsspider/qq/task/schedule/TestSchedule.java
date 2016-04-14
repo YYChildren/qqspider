@@ -1,4 +1,4 @@
-package com.mingchao.snsspider.qq.task.impl;
+package com.mingchao.snsspider.qq.task.schedule;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

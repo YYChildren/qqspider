@@ -29,7 +29,6 @@ import com.mingchao.snsspider.qq.model.UserKey;
 import com.mingchao.snsspider.qq.model.UserMood;
 import com.mingchao.snsspider.qq.model.UserRelation;
 import com.mingchao.snsspider.qq.task.VisitTask;
-import com.mingchao.snsspider.qq.util.WebDriverUtil;
 import com.mingchao.snsspider.schedule.Schedule;
 import com.mingchao.snsspider.storage.Storage;
 import com.mingchao.snsspider.util.TimeUtils;
@@ -75,31 +74,34 @@ public class VisitMoodTask extends VisitTask<String> {
 	// 未登录状态的处理
 	@Override
 	protected String handleNoLogin(boolean hadTryLogin, WebDriverWrapper webDriverWrapper) {
-		log.info(WebDriverUtil.STATUS.NOLOGIN);
 		// 如果已经尝试登录过一次
 		if (hadTryLogin) {
 			reschaduleRela();
 			return null;
-		} else {
-			try {
-				login(webDriverWrapper);
-			} catch (TimeoutException e) {
-				log.warn(e, e);
-				reschaduleRela();
-				return null;
-			}
-			return doVisit(true, webDriverWrapper);
 		}
+		try {
+			while (true) {
+				if (login(webDriverWrapper)) {// 如果登录成功
+					break;
+				}
+				TimeUtils.sleep();
+			}
+		} catch (InterruptedException e) {
+			throw new NPInterruptedException(e);
+		}
+		return doVisit(true, webDriverWrapper);
 	}
 
 	// 无访问权限的处理
 	@Override
 	protected String handleNoProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为无权访问
-		UserKey uk = new UserKey();
-		uk.setQq(qq);
-		uk.setVisitable(false);
-		storage.insertDuplicate(uk);
+		if (pageNum.equals(1)) {
+			UserKey uk = new UserKey();
+			uk.setQq(qq);
+			uk.setVisitable(false);
+			storage.insertDuplicate(uk);
+		}
 		return null;
 	}
 
@@ -107,11 +109,12 @@ public class VisitMoodTask extends VisitTask<String> {
 	@Override
 	protected String handleProvilege(WebDriverWrapper webDriverWrapper) {
 		// 设置为有权访问
-		UserKey uk = new UserKey();
-		uk.setQq(qq);
-		uk.setVisitable(true);
-		storage.insertDuplicate(uk);
-
+		if (pageNum.equals(1)) {
+			UserKey uk = new UserKey();
+			uk.setQq(qq);
+			uk.setVisitable(true);
+			storage.insertDuplicate(uk);
+		}
 		String pageSource = null;
 		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
 		webDriver.switchTo().frame(webDriver.findElement(By.xpath("//iframe[@class='app_canvas_frame']")));

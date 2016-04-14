@@ -1,6 +1,7 @@
 package com.mingchao.snsspider.qq.task;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -34,7 +35,7 @@ public abstract class VisitTask<T> extends BaseTaskImpl {
 		try {
 			info = pool.submit(getTask);
 		} catch(WebDriverCosingException e){//Do Notting
-		}catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			log.warn(e,e);
 			throw new NPInterruptedException(e);
 		}
@@ -78,8 +79,7 @@ public abstract class VisitTask<T> extends BaseTaskImpl {
 		}
 	}
 
-	protected abstract T handleNoLogin(boolean hadTryLogin,
-			WebDriverWrapper webDriverWrapper);
+	protected abstract T handleNoLogin(boolean hadTryLogin, WebDriverWrapper webDriverWrapper);
 
 	protected abstract T handleNoProvilege(WebDriverWrapper webDriverWrapper);
 
@@ -93,10 +93,14 @@ public abstract class VisitTask<T> extends BaseTaskImpl {
 	
 	protected abstract void handleResult(T info);
 
-	protected void login(WebDriverWrapper webDriverWrapper) {
+	protected boolean login(WebDriverWrapper webDriverWrapper) {
 		RemoteWebDriver webDriver = webDriverWrapper.getWebDriver();
-		for (int i = 0; i < 2; i++) {
+		log.info("Try login");
+		for (int i = 0; i < 3; i++) {
 			try {
+				if(WebDriverUtil.verifyStatus(webDriver) != WebDriverUtil.STATUS.NOLOGIN){
+					return true;
+				}
 				webDriver.switchTo().frame("login_frame");
 				webDriver.executeScript("arguments[0].click();", webDriver.findElement(By.id("switcher_plogin")));
 				webDriver.executeScript("arguments[0].value='"+para.getAccountUser()+"';", webDriver.findElement(By.id("u")));
@@ -104,10 +108,11 @@ public abstract class VisitTask<T> extends BaseTaskImpl {
 				webDriver.executeScript("arguments[0].click();", webDriver.findElement(By.id("login_button")));
 				webDriver.switchTo().defaultContent();
 				if(WebDriverUtil.verifyStatus(webDriver) != WebDriverUtil.STATUS.NOLOGIN){
-					break;
+					return true;
 				}
-			} catch (WebDriverException e) {
+			} catch (TimeoutException | StaleElementReferenceException e) {
 			}
 		}
+		return false;
 	}
 }

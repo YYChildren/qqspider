@@ -43,7 +43,7 @@ public class Spider implements Crawlable {
 			dispatchFollowThread.start();
 			visitFollowThread.start();
 			timer = new Timer();
-			timer.schedule(new DumpBloomTask(), para.getDumpPeriod(), para.getDumpPeriod());//每10分钟dump 一次bloom filter
+			timer.schedule(new DumpBloomTask(), para.getDumpPeriod(), para.getDumpPeriod());//定时dump 一次bloom filter
 		} catch (Exception e) {
 			LogFactory.getLog(this.getClass().getName()).error(e, e);
 		}

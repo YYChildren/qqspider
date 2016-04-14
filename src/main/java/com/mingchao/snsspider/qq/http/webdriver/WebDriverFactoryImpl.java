@@ -20,7 +20,7 @@ public class WebDriverFactoryImpl implements WebDriverFactory {
 	@Override
 	public RemoteWebDriver createWebDriver() throws InstantiationException, IllegalAccessException {
 		RemoteWebDriver webDriver = null;
-		DesiredCapabilities sCaps = DesiredCapabilities.chrome();
+		DesiredCapabilities sCaps = DesiredCapabilities.phantomjs();
 		sCaps.setPlatform(Platform.UNIX);
 		try {
 			webDriverClass.getConstructor(Capabilities.class).newInstance(sCaps);

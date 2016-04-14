@@ -1,17 +1,17 @@
-package com.mingchao.snsspider.qq.task.impl;
+package com.mingchao.snsspider.qq.task.work;
 
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.qq.provider.ResourceProvider;
 import com.mingchao.snsspider.qq.resource.Resource;
-import com.mingchao.snsspider.qq.task.work.VisitPeopleTask;
+import com.mingchao.snsspider.qq.task.work.VisitProfileTask;
 
-public class TestVisitPeopleTask {
+public class TestProfileTask {
 	public static void main(String[] args) {
 		Resource resource = ResourceProvider.INSTANCE.getResource();
 		ScheduleUserKey suk = new ScheduleUserKey();
-		suk.setQq(1946231687L);
+		suk.setQq(1286406997L);
 		try {
-			new VisitPeopleTask(suk).execute();
+			new VisitProfileTask(suk).execute();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}finally{

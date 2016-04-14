@@ -1,9 +1,5 @@
 package com.mingchao.snsspider.qq.task.work;
 
-import java.io.IOException;
-
-import org.apache.http.client.ClientProtocolException;
-
 import com.mingchao.snsspider.qq.model.ScheduleFollowKey;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
 import com.mingchao.snsspider.qq.task.BaseTaskImpl;
@@ -19,7 +15,7 @@ public class DispatchFollowTask  extends BaseTaskImpl {
 	}
 
 	@Override
-	public void execute() throws ClientProtocolException, IOException {
+	public void execute(){
 		schaduleRela();
 	}
 

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `t_queue_status`(
 	`tablename` VARCHAR(32) PRIMARY KEY,
 	`idstart` BIGINT,
 	`idend` BIGINT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `t_schedule_user_key` (
 	`id` BIGINT PRIMARY KEY AUTO_INCREMENT,

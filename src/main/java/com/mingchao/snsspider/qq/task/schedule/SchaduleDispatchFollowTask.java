@@ -1,7 +1,5 @@
 package com.mingchao.snsspider.qq.task.schedule;
 
-import java.io.IOException;
-
 import com.mingchao.snsspider.exception.NPInterruptedException;
 import com.mingchao.snsspider.executor.TaskExcutor;
 import com.mingchao.snsspider.qq.model.ScheduleUserKey;
@@ -15,9 +13,10 @@ public class SchaduleDispatchFollowTask extends BaseCloseableTask {
 	private boolean run = true;
 	private Schedule<ScheduleUserKey> scheduleUser = resource.getScheduleUser();
 	private TaskExcutor executor = resource.getTaskExecutor();
+	
 
 	@Override
-	public void execute() throws IOException {
+	public void execute(){
 		while (run) {
 			try {
 				ScheduleUserKey usk = scheduleUser.fetch();
